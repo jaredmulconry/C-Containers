@@ -1147,10 +1147,12 @@ namespace custom_std
 		iterator insert(const_iterator _Xpos, _InputIter _XiFirst, 
 			_InputIter _XiLast)
 		{
+			auto _Off = _Xpos - this->cbegin();
+
 			this->_InsertRange(_Xpos, _XiFirst, _XiLast,
 				typename ::std::iterator_traits<_InputIter>::iterator_category());
 
-			return this->begin() + (_Xpos - this->begin());
+			return this->begin() + _Off;
 		}
 		iterator insert(const_iterator _Xpos,
 			::std::initializer_list<_Ta> _Xelems)
