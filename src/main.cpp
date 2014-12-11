@@ -13,8 +13,12 @@ void AddRemoveTest();
 template<typename T, typename A, int N>
 void PrintMyVec(const custom_std::vector<T, A>&, const char(&)[N]);
 
-using allocator_type = MyMallocator<int>;
-using vec_type = custom_std::vector < int, allocator_type >;
+template<typename T>
+using allocator_type = MyMallocator<T>;
+template<typename T>
+using vec_type = custom_std::vector < T, allocator_type<T> >;
+template vec_type<int>;
+template vec_type<bool>;
 
 int main()
 {
@@ -32,26 +36,26 @@ int main()
 
 void ConstructorTest()
 {
-	allocator_type alloc;
-	vec_type v1;
-	vec_type v2(alloc);
-	vec_type v3(10);
-	vec_type v4(10, 11);
-	vec_type v5(v3.begin(), v3.end());
-	vec_type v6(v4);
-	vec_type v7(std::move(v5));
-	vec_type v8(v4, alloc);
-	vec_type v9(std::move(v3), alloc);
-	vec_type v10{ 11, 22, 33, 44, 55, 66 };
+	allocator_type<int> alloc;
+	vec_type<int> v1;
+	vec_type<int> v2(alloc);
+	vec_type<int> v3(10);
+	vec_type<int> v4(10, 11);
+	vec_type<int> v5(v3.begin(), v3.end());
+	vec_type<int> v6(v4);
+	vec_type<int> v7(std::move(v5));
+	vec_type<int> v8(v4, alloc);
+	vec_type<int> v9(std::move(v3), alloc);
+	vec_type<int> v10{ 11, 22, 33, 44, 55, 66 };
 
 	(void)v1, (void)v2, (void)v6, (void)v7,
 		(void)v8, (void)v9, (void)v10;
 }
 void AssignmentTest()
 {
-	vec_type v1;
-	vec_type v2;
-	vec_type v3;
+	vec_type<int> v1;
+	vec_type<int> v2;
+	vec_type<int> v3;
 
 	v1 = v2;
 	v2 = std::move(v3);
@@ -65,7 +69,7 @@ void AssignmentTest()
 void IteratorTest()
 {
 	struct X { int a; };
-	custom_std::vector<X, MyMallocator<X>> v(1);
+	vec_type<X> v(1);
 	auto allocInstance = v.get_allocator();
 
 	auto i1 = v.begin();
@@ -100,7 +104,7 @@ void IteratorTest()
 }
 void DimensionTest()
 {
-	vec_type v;
+	vec_type<int> v;
 
 	v.size();
 	v.max_size();
@@ -113,8 +117,8 @@ void DimensionTest()
 }
 void AccessorTest()
 {
-	vec_type v(32, 42);
-	const vec_type& vr = v;
+	vec_type<int> v(32, 42);
+	const vec_type<int>& vr = v;
 
 	v[0], vr[0], v.at(0), vr.at(0);
 	v.front(), vr.front(), v.back(), vr.back();
@@ -122,7 +126,7 @@ void AccessorTest()
 }
 void AddRemoveTest()
 {
-	vec_type v1;
+	vec_type<int> v1;
 	int a = 24;
 
 	v1.emplace_back(42);
@@ -138,7 +142,7 @@ void AddRemoveTest()
 	v1.erase(v1.begin() + v1.size() / 2);
 	v1.erase(v1.begin(), v1.begin() + v1.size() / 3);
 
-	vec_type v2;
+	vec_type<int> v2;
 	v2.swap(v1);
 	v2.clear();
 }
