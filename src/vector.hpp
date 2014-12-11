@@ -29,7 +29,7 @@ namespace custom_std
 	public:
 		_Vector_const_iterator() noexcept = default;
 		_Vector_const_iterator(const _Vector_const_iterator&) noexcept = default;
-		~_Vector_const_iterator() noexcept = default;
+		~_Vector_const_iterator() = default;
 		template<typename _Iter, class =
 			typename ::std::enable_if<::std::is_base_of<_MyTa,
 			_Iter>::value>::type>
@@ -89,7 +89,7 @@ namespace custom_std
 			return *this += -_Xn;
 		}
 
-		reference operator[](difference_type _Xn)
+		reference operator[](difference_type _Xn) const
 		{
 			return *(*this + _Xn);
 		}
@@ -172,7 +172,7 @@ namespace custom_std
 
 		_Vector_iterator() noexcept = default;
 		_Vector_iterator(const _Vector_iterator&) noexcept = default;
-		~_Vector_iterator() noexcept = default;
+		~_Vector_iterator() = default;
 		explicit _Vector_iterator(_Tptr _Xp) noexcept
 			: _Vector_const_iterator<_MyVec>(_Xp)
 		{}
@@ -219,7 +219,7 @@ namespace custom_std
 			return *this += -_Xn;
 		}
 
-		reference operator[](difference_type _Xn)
+		reference operator[](difference_type _Xn) const
 		{
 			return *(*this + _Xn);
 		}
@@ -274,7 +274,7 @@ namespace custom_std
 		}
 	};
 
-	template<typename _Ta, typename _Alloc = std::allocator<_Ta>>
+	template<typename _Ta, typename _Alloc = ::std::allocator<_Ta>>
 	class vector
 	{
 	public:
@@ -1251,6 +1251,393 @@ namespace custom_std
 	{
 		_Xa.swap(_Xb);
 	}
+
+	typedef unsigned int	_VecBoolStoreType;
+	const int _VecBoolBitCount = 8 * sizeof(_VecBoolStoreType);
+
+	template<typename _MyVec>
+	class _Vector_bool_iterator_storage
+	{
+	public:
+		typedef _Vector_bool_iterator_storage<_MyVec> _MyTa;
+		typedef typename _MyVec::size_type	size_type;
+		typedef _VecBoolStoreType	_StoreType;
+		typedef _StoreType*	_StorePtr;
+
+		_StorePtr _Pos;
+		size_type _Off;
+
+		_Vector_bool_iterator_storage() noexcept = default;
+		_Vector_bool_iterator_storage(const _MyTa&) noexcept = default;
+		~_Vector_bool_iterator_storage() = default;
+		_Vector_bool_iterator_storage(_StorePtr _Xpos, size_type _Xoff)
+			: _Pos(_Xpos)
+			, _Off(_Xoff)
+		{}
+		_Vector_bool_iterator_storage& operator=(const _MyTa&)noexcept = default;
+	};
+
+	template<typename _MyVec>
+	class _Vector_bool_const_iterator : 
+		public _Vector_bool_iterator_storage<_MyVec>
+	{
+	public:
+		typedef _Vector_bool_const_iterator<_MyVec>		_MyTa;
+		typedef _Vector_bool_iterator_storage<_MyVec>	_MyBase;
+		typedef ::std::random_access_iterator_tag		iterator_category;
+		typedef typename _MyVec::value_type				value_type;
+		typedef typename _MyVec::size_type				size_type;
+		typedef typename _MyVec::difference_type		difference_type;
+		typedef typename _MyVec::const_reference		const_reference;
+		typedef const_reference							reference;
+		typedef const_reference*						pointer;
+		typedef _VecBoolStoreType						_StoreType;
+		typedef _StoreType*								_StorePtr;
+		typedef typename _MyVec::reference				_RefProx;
+
+		void _IncrementPos()
+		{
+			if (this->_Off < _VecBoolBitCount - 1)
+			{
+				++this->_Off;
+			}
+			else
+			{
+				this->_Off = 0;
+				++this->_Pos;
+			}
+		}
+		void _DecrementPos()
+		{
+			if (this->_Off != 0)
+			{
+				--this->_Off;
+			}
+			else
+			{
+				this->_Off = _VecBoolBitCount - 1;
+				--this->_Pos;
+			}
+		}
+	public:
+		_Vector_bool_const_iterator() noexcept = default;
+		_Vector_bool_const_iterator(const _MyTa&) noexcept = default;
+		~_Vector_bool_const_iterator() = default;
+		_Vector_bool_const_iterator(_StorePtr _Xpos, size_type _Xoff)
+			:_Vector_bool_iterator_storage<_MyVec>(_Xpos, _Xoff)
+		{}
+		template<typename _Iter, class =
+			typename ::std::enable_if<::std::is_base_of<_MyTa,
+			_Iter>::value>::type>
+		explicit _Vector_bool_const_iterator(const _Iter& _Iderived)
+			: _Vector_bool_const_iterator(
+				static_cast<const _MyTa&>(_Iderived)._Pos,
+				static_cast<const _MyTa&>(_Iderived)._Off)
+		{}
+		_Vector_bool_const_iterator& operator=(const _MyTa& _Xa)noexcept
+		{
+			return static_cast<_MyBase&>(*this) = 
+				static_cast<const _MyBase&>(_Xa);
+		}
+
+		const_reference operator*() const
+		{
+			return _RefProx(*this);
+		}
+
+		_MyTa& operator++()
+		{
+			_IncrementPos();
+			return *this;
+		}
+		_MyTa operator++(int)
+		{
+			_MyTa _Tmp = *this;
+			++*this;
+			return _Tmp;
+		}
+		_MyTa& operator--()
+		{
+			_DecrementPos();
+			return *this;
+		}
+		_MyTa operator--(int)
+		{
+			_MyTa _Tmp = *this;
+			--*this;
+			return _Tmp;
+		}
+
+		_MyTa& operator+=(difference_type _Xn)
+		{
+			difference_type _Xm = _Xn;
+			if (_Xm >= 0)
+				while (_Xm--)
+					++*this;
+			else
+				while (_Xm++)
+					--*this;
+			return *this;
+		}
+		_MyTa& operator-=(difference_type _Xn)
+		{
+			return *this += -_Xn;
+		}
+
+		reference operator[](difference_type _Xn) const
+		{
+			return *(*this + _Xn);
+		}
+
+		inline
+			_MyTa operator+(difference_type _Xn) const
+		{
+			_MyTa _Tmp = *this;
+			return _Tmp += _Xn;
+		}
+		inline
+			_MyTa operator-(difference_type _Xn) const
+		{
+			_MyTa _Tmp = *this;
+			return _Tmp -= _Xn;
+		}
+		inline friend
+			difference_type operator-(const _MyTa& _Xa, const _MyTa& _Xb)
+		{
+			return _VecBoolBitCount * (_Xa._Pos - _Xb._Pos)
+				+ static_cast<difference_type>(_Xa._Off)
+				- static_cast<difference_type>(_Xb._Off);
+		}
+
+		inline friend
+			bool operator==(const _MyTa& _Xa, const _MyTa& _Xb)
+		{
+			return _Xa._Pos == _Xb._Pos &&
+				_Xa._Off == _Xb._Off;
+		}
+		inline friend
+			bool operator!=(const _MyTa& _Xa, const _MyTa& _Xb)
+		{
+			return !(_Xa == _Xb);
+		}
+		inline friend
+			bool operator<(const _MyTa& _Xa, const _MyTa& _Xb)
+		{
+			return _Xa._Pos < _Xb._Pos ||
+					(_Xa._Pos == _Xb._Pos &&
+					_Xa._Off < _Xb._Off);
+		}
+		inline friend
+			bool operator>(const _MyTa& _Xa, const _MyTa& _Xb)
+		{
+			return _Xb < _Xa;
+		}
+		inline friend
+			bool operator<=(const _MyTa& _Xa, const _MyTa& _Xb)
+		{
+			return !(_Xb < _Xa);
+		}
+		inline friend
+			bool operator>=(const _MyTa& _Xa, const _MyTa& _Xb)
+		{
+			return !(_Xa < _Xb);
+		}
+	};
+
+	template<typename _MyVec>
+	class _Vector_bool_iterator : public _Vector_bool_const_iterator<_MyVec>
+	{
+	public:
+		typedef _Vector_bool_iterator<_MyVec>			_MyTa;
+		typedef _Vector_bool_const_iterator<_MyVec>		_MyBase;
+		typedef typename _MyVec::value_type				value_type;
+		typedef typename _MyVec::reference				reference;
+		typedef typename _MyVec::pointer				pointer;
+		typedef typename _MyVec::size_type				size_type;
+		typedef typename _MyVec::difference_type		difference_type;
+		typedef typename _MyBase::iterator_category		iterator_category;
+		typedef _VecBoolStoreType						_StoreType;
+		typedef _StoreType*								_StorePtr;
+		typedef reference								_RefProx;
+
+	private:
+		inline static
+			_MyBase& _CvtRef(_MyTa& _Xa)
+		{
+			return static_cast<_MyBase&>(_Xa);
+		}
+		inline static
+			const _MyBase& _CvtRef(const _MyTa& _Xa)
+		{
+			return static_cast<const _MyBase&>(_Xa);
+		}
+
+		_Vector_bool_iterator() noexcept = default;
+		_Vector_bool_iterator(const _MyTa&) noexcept = default;
+		~_Vector_bool_iterator() = default;
+		_Vector_bool_iterator(_StorePtr _Xpos, size_type _Xoff)
+			: _MyBase(_Xpos, _Xoff)
+		{}
+		_Vector_bool_iterator& operator=(const _MyTa& _Xa)noexcept
+		{
+			return _CvtRef(*this) = _CvtRef(_Xa);
+		}
+
+		reference operator*() const
+		{
+			return _RefProx(*this);//(reference)(**((_MyBase* const)this));
+		}
+
+		_MyTa& operator++()
+		{
+			++_MyTa::_CvtRef(*this);
+			return *this;
+		}
+		_MyTa operator++(int)
+		{
+			_MyTa _Tmp = *this;
+			++_MyTa::_CvtRef(*this);
+			return _Tmp;
+		}
+		_MyTa& operator--()
+		{
+			--_MyTa::_CvtRef(*this);;
+			return *this;
+		}
+		_MyTa operator--(int)
+		{
+			_MyTa _Tmp = *this;
+			--_MyTa::_CvtRef(*this);;
+			return _Tmp;
+		}
+		_MyTa& operator+=(difference_type _Xn)
+		{
+			_MyTa::_CvtRef(*this) += _Xn;
+			return *this;
+		}
+		_MyTa& operator-=(difference_type _Xn)
+		{
+			return *this += -_Xn;
+		}
+
+		reference operator[](difference_type _Xn) const
+		{
+			return *(*this + _Xn);
+		}
+
+		inline
+			_MyTa operator+(difference_type _Xn) const
+		{
+			_MyTa _Tmp = *this;
+			return _Tmp += _Xn;
+		}
+		inline
+			_MyTa operator-(difference_type _Xn) const
+		{
+			_MyTa _Tmp = *this;
+			return _Tmp -= _Xn;
+		}
+		inline friend
+			difference_type operator-(const _MyTa& _Xa, const _MyTa& _Xb)
+		{
+			return _MyTa::_CvtRef(_Xa) - _MyTa::_CvtRef(_Xb);
+		}
+
+		inline friend
+			bool operator==(const _MyTa& _Xa, const _MyTa& _Xb)
+		{
+			return _MyTa::_CvtRef(_Xa) == _MyTa::_CvtRef(_Xb);
+		}
+		inline friend
+			bool operator!=(const _MyTa& _Xa, const _MyTa& _Xb)
+		{
+			return !(_Xa == _Xb);
+		}
+		inline friend
+			bool operator<(const _MyTa& _Xa, const _MyTa& _Xb)
+		{
+			return _MyTa::_CvtRef(_Xa) < _MyTa::_CvtRef(_Xb);
+		}
+		inline friend
+			bool operator>(const _MyTa& _Xa, const _MyTa& _Xb)
+		{
+			return _Xb < _Xa;
+		}
+		inline friend
+			bool operator<=(const _MyTa& _Xa, const _MyTa& _Xb)
+		{
+			return !(_Xb < _Xa);
+		}
+		inline friend
+			bool operator>=(const _MyTa& _Xa, const _MyTa& _Xb)
+		{
+			return !(_Xa < _Xb);
+		}
+	};
+
+	template<typename _Alloc>
+	class vector<bool, _Alloc>
+	{
+	public:
+		typedef vector<bool, _Alloc>	_MyTa;
+		typedef _VecBoolStoreType	_StoreType;
+		typedef bool	const_reference;
+		typedef bool	value_type;
+		typedef _Alloc	allocator_type;
+		typedef ::std::allocator_traits<_Alloc>	_AllocTraits;
+		typedef typename _AllocTraits::template rebind_alloc<_StoreType>	_AllocTa;
+		typedef ::std::allocator_traits<_AllocTa> _TaAllocTraits;
+		typedef typename _TaAllocTraits::size_type	size_type;
+		typedef typename _TaAllocTraits::difference_type	difference_type;
+		typedef _Vector_bool_iterator<_MyTa>	iterator;
+		typedef _Vector_bool_const_iterator<_MyTa>	const_iterator;
+		typedef iterator	pointer;
+		typedef const_iterator	const_pointer;
+		typedef ::std::reverse_iterator<iterator>	reverse_iterator;
+		typedef ::std::reverse_iterator<const_iterator>	const_reverse_iterator;
+
+		class reference : public _Vector_bool_iterator_storage<vector>
+		{
+			friend class vector;
+			typedef _Vector_bool_iterator_storage<vector> _MyBase;
+			typedef _VecBoolStoreType	_StoreType;
+
+			_StoreType _Mask() const
+			{
+				return _StoreType(1) << this->_Off;
+			}
+			reference() noexcept = default;
+		public:
+			reference(const _MyBase& _Xa)
+				: _MyBase(_Xa)
+			{}
+			~reference() = default;
+			operator bool() const noexcept
+			{
+				return (*this->_Pos & this->_Mask()) != 0;
+			}
+			reference& operator=(const bool _Xa) noexcept
+			{
+				if (_Xa)
+				{
+					*this->_Pos |= this->_Mask();
+				}
+				else
+				{
+					*this->_Pos &= (~this->_Mask());
+				}
+				return *this;
+			}
+			reference& operator=(const reference& _Xa) noexcept
+			{
+				return *this = bool(_Xa);
+			}
+			void flip() noexcept
+			{
+				*this->_Pos ^= this->_Mask();
+			}
+		};
+	};
 }
 
 #endif //_Vector_hpp
