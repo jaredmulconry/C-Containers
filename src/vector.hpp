@@ -33,8 +33,8 @@ namespace custom_std
 		template<typename _Iter, class =
 			typename ::std::enable_if<::std::is_base_of<_MyTa,
 			_Iter>::value>::type>
-			explicit _Vector_const_iterator(const _Iter& _Iderived) noexcept
-			:_Pos(static_cast<const _MyTa&>(_Iderived)._Pos)
+			explicit _Vector_const_iterator(const _Iter& _XiDerived) noexcept
+			:_Pos(static_cast<const _MyTa&>(_XiDerived)._Pos)
 		{}
 		explicit _Vector_const_iterator(_Tptr _Xp) noexcept
 			: _Pos(_Xp)
@@ -335,8 +335,8 @@ namespace custom_std
 				_DestroyObj(_XiFirst);
 		}
 
-		template<typename _InputIt>
-		void _ConstructIterators(_InputIt _XiFirst, _InputIt _XiLast,
+		template<typename _InputIter>
+		void _ConstructIterators(_InputIter _XiFirst, _InputIter _XiLast,
 			::std::input_iterator_tag)
 		{
 			try
@@ -350,8 +350,8 @@ namespace custom_std
 				throw;
 			}
 		}
-		template<typename _FwdIt>
-		void _ConstructIterators(_FwdIt _XiFirst, _FwdIt _XiLast,
+		template<typename _ForwardIter>
+		void _ConstructIterators(_ForwardIter _XiFirst, _ForwardIter _XiLast,
 			::std::forward_iterator_tag)
 		{
 			auto _Count = size_type(::std::distance(_XiFirst, _XiLast));
@@ -403,8 +403,9 @@ namespace custom_std
 			}
 		}
 
-		template<typename _FwdIt>
-		pointer _CopyRange(_FwdIt _XiFirst, _FwdIt _XiLast, pointer _XoFirst)
+		template<typename _ForwardIter>
+		pointer _CopyRange(_ForwardIter _XiFirst, _ForwardIter _XiLast, 
+			pointer _XoFirst)
 		{
 			pointer _Lfirst = _XoFirst;
 			try
@@ -420,8 +421,9 @@ namespace custom_std
 
 			return _XoFirst;
 		}
-		template<typename _InputIt>
-		pointer _AssignRange(_InputIt _XiFirst, _InputIt _XiLast, pointer _XoFirst)
+		template<typename _InputIter>
+		pointer _AssignRange(_InputIter _XiFirst, _InputIter _XiLast, 
+			pointer _XoFirst)
 		{
 			for (; _XiFirst != _XiLast; ++_XiFirst, (void)++_XoFirst)
 				*_XoFirst = *_XiFirst;
@@ -490,15 +492,15 @@ namespace custom_std
 			this->_First = _Buf;
 		}
 
-		template<typename _InputIt>
-		void _Transfer(_InputIt _XiFirst, _InputIt _XiLast, pointer _XoFirst,
+		template<typename _InputIter>
+		void _Transfer(_InputIter _XiFirst, _InputIter _XiLast, pointer _XoFirst,
 			::std::true_type)
 		{
 			for (; _XiFirst != _XiLast; ++_XiFirst, (void)++_XoFirst)
 				this->_ConstructElem(_XoFirst, ::std::move(*_XiFirst));
 		}
-		template<typename _InputIt>
-		void _Transfer(_InputIt _XiFirst, _InputIt _XiLast, pointer _XoFirst,
+		template<typename _InputIter>
+		void _Transfer(_InputIter _XiFirst, _InputIter _XiLast, pointer _XoFirst,
 			::std::false_type)
 		{
 			pointer _Lfirst = _XoFirst;
@@ -513,17 +515,17 @@ namespace custom_std
 				throw;
 			}
 		}
-		template<typename _InputIt>
-		void _Transfer(_InputIt _XiFirst, _InputIt _XiLast,
+		template<typename _InputIter>
+		void _Transfer(_InputIter _XiFirst, _InputIter _XiLast,
 			pointer _XoFirst)
 		{
 			this->_Transfer(_XiFirst, _XiLast, _XoFirst,
 				typename ::std::is_nothrow_move_constructible<_Ta>::type());
 		}
 
-		template<typename _InputIt>
-		void _InsertRange(const_iterator _Xpos, _InputIt _XiFirst, 
-			_InputIt _XiLast, ::std::input_iterator_tag)
+		template<typename _InputIter>
+		void _InsertRange(const_iterator _Xpos, _InputIter _XiFirst,
+			_InputIter _XiLast, ::std::input_iterator_tag)
 		{
 			if (_XiFirst == _XiLast) return;
 
@@ -546,9 +548,9 @@ namespace custom_std
 			::std::rotate(this->begin() + _Off, this->begin() + _OldSize,
 				this->end());
 		}
-		template<typename _InputIt>
-		void _InsertRange(const_iterator _Xpos, _InputIt _XiFirst,
-			_InputIt _XiLast, ::std::forward_iterator_tag)
+		template<typename _ForwardIter>
+		void _InsertRange(const_iterator _Xpos, _ForwardIter _XiFirst,
+			_ForwardIter _XiLast, ::std::forward_iterator_tag)
 		{
 			auto _Dist = ::std::distance(_XiFirst, _XiLast);
 			auto _Off = _Xpos - this->cbegin();
@@ -643,22 +645,22 @@ namespace custom_std
 				throw;
 			}
 		}
-		template<typename _InputIt, class =
-			typename ::std::enable_if < !::std::is_integral<_InputIt>::value 
+		template<typename _InputIter, class =
+			typename ::std::enable_if < !::std::is_integral<_InputIter>::value
 										>::type>
-			vector(_InputIt _XiFirst, _InputIt _XiLast,
+			vector(_InputIter _XiFirst, _InputIter _XiLast,
 			const _Alloc& _Xalloc = _Alloc())
 			: vector(_Xalloc)
 		{
 			this->_ConstructIterators(_XiFirst, _XiLast,
-				typename ::std::iterator_traits<_InputIt>::iterator_category());
+				typename ::std::iterator_traits<_InputIter>::iterator_category());
 		}
 		vector(const vector& _Xa)
 			:vector(_TaAllocTraits::select_on_container_copy_construction(_Xa._Al))
 		{
-			auto _Xsize = _Xa.size();
-			if (!this->_IsValidCapacity(_Xsize)) return;
-			this->_Reserve(_Xsize);
+			auto _Size = _Xa.size();
+			if (!this->_IsValidCapacity(_Size)) return;
+			this->_Reserve(_Size);
 
 			try
 			{
@@ -1215,8 +1217,7 @@ namespace custom_std
 	bool operator==(const vector<_Ta, _Alloc>& _Xa, const vector<_Ta, _Alloc>& _Xb)
 	{
 		return _Xa.size() == _Xb.size() && 
-			::std::equal(_Xa.begin(), _Xa.end(),
-			_Xb.begin(), _Xb.end());
+			::std::equal(_Xa.begin(), _Xa.end(), _Xb.begin());
 	}
 	template <class _Ta, class _Alloc>
 	bool operator!=(const vector<_Ta, _Alloc>& _Xa, const vector<_Ta, _Alloc>& _Xb)
@@ -1295,6 +1296,7 @@ namespace custom_std
 		typedef _StoreType*								_StorePtr;
 		typedef typename _MyVec::reference				_RefProx;
 
+	private:
 		void _IncrementPos()
 		{
 			if (this->_Off < _VecBoolBitCount - 1)
@@ -1319,6 +1321,16 @@ namespace custom_std
 				--this->_Pos;
 			}
 		}
+		inline static
+			_MyBase& _CvtRef(_MyTa& _Xa)
+		{
+			return static_cast<_MyBase&>(_Xa);
+		}
+		inline static
+			const _MyBase& _CvtRef(const _MyTa& _Xa)
+		{
+			return static_cast<const _MyBase&>(_Xa);
+		}
 	public:
 		_Vector_bool_const_iterator() noexcept = default;
 		_Vector_bool_const_iterator(const _MyTa&) noexcept = default;
@@ -1336,8 +1348,8 @@ namespace custom_std
 		{}
 		_Vector_bool_const_iterator& operator=(const _MyTa& _Xa)noexcept
 		{
-			return static_cast<_MyBase&>(*this) = 
-				static_cast<const _MyBase&>(_Xa);
+			_CvtRef(*this) = _CvtRef(_Xa);
+			return *this;
 		}
 
 		const_reference operator*() const
@@ -1472,6 +1484,7 @@ namespace custom_std
 			return static_cast<const _MyBase&>(_Xa);
 		}
 
+	public:
 		_Vector_bool_iterator() noexcept = default;
 		_Vector_bool_iterator(const _MyTa&) noexcept = default;
 		~_Vector_bool_iterator() = default;
@@ -1480,7 +1493,8 @@ namespace custom_std
 		{}
 		_Vector_bool_iterator& operator=(const _MyTa& _Xa)noexcept
 		{
-			return _CvtRef(*this) = _CvtRef(_Xa);
+			_CvtRef(*this) = _CvtRef(_Xa);
+			return *this;
 		}
 
 		reference operator*() const
@@ -1589,13 +1603,13 @@ namespace custom_std
 		typedef ::std::allocator_traits<_AllocTa> _TaAllocTraits;
 		typedef typename _TaAllocTraits::size_type	size_type;
 		typedef typename _TaAllocTraits::difference_type	difference_type;
+		typedef vector<_StoreType, _AllocTa>	_VecType;
 		typedef _Vector_bool_iterator<_MyTa>	iterator;
 		typedef _Vector_bool_const_iterator<_MyTa>	const_iterator;
 		typedef iterator	pointer;
 		typedef const_iterator	const_pointer;
 		typedef ::std::reverse_iterator<iterator>	reverse_iterator;
 		typedef ::std::reverse_iterator<const_iterator>	const_reverse_iterator;
-
 		class reference : public _Vector_bool_iterator_storage<vector>
 		{
 			friend class vector;
@@ -1637,6 +1651,369 @@ namespace custom_std
 				*this->_Pos ^= this->_Mask();
 			}
 		};
+
+	private:
+		_VecType _Store;
+		size_type _Size;
+
+		template<typename _InputIter>
+		void _InsertRange(const_iterator _Xpos, _InputIter _XiFirst,
+						_InputIter _XiLast, ::std::input_iterator_tag)
+		{
+			auto _Off = _Xpos - this->begin();
+
+			for (; _XiFirst != _XiLast; ++_XiFirst, (void)_Off)
+			{
+				this->insert(this->begin() + _Off, *_XiFirst);
+			}
+		}
+		template<typename _ForwardIter>
+		void _InsertRange(const_iterator _Xpos, _ForwardIter _XiFirst,
+			_ForwardIter _XiLast, ::std::forward_iterator_tag)
+		{
+			auto _Dist = ::std::distance(_XiFirst, _XiLast);
+			auto _Off = this->_MakeSpace(_Xpos, _Dist);
+			::std::copy(_XiFirst, _XiLast, this->begin() + _Off);
+		}
+		size_type _MakeSpace(const_iterator _Xpos, size_type _Xn)
+		{
+			auto _Off = _Xpos - this->begin();
+
+			if (_Off == 0)
+			{
+			}
+			else if (this->max_size() - this->size() < _Xn)
+			{
+				throw ::std::length_error("vector<bool> is too large");
+			}
+			else
+			{
+				this->_Store.resize(this->_ToUnits(this->size() + _Xn));
+				if (this->empty())
+				{
+					this->_Size += _Xn;
+				}
+				else
+				{
+					auto _PrevEnd = this->end();
+					this->_Size += _Xn;
+					::std::copy_backward(this->begin() + _Off, _PrevEnd,
+						this->end());
+				}
+			}
+
+			return _Off;
+		}
+		void _Cleanup()
+		{
+			this->_Store.clear();
+			this->_Size = 0;
+		}
+		static size_type _ToUnits(size_type _Xn)
+		{
+			return (_Xn + _VecBoolBitCount - 1) / _VecBoolBitCount;
+		}
+	public:
+		explicit vector(const _Alloc& _Xalloc = _Alloc())
+			: _Store(_Xalloc)
+			, _Size()
+		{}
+		explicit vector(size_type _Xn, const bool& _Xval = bool(),
+			const _Alloc& _Xalloc = _Alloc())
+			:_MyTa(_Xalloc)
+		{
+			if (_Xn == 0) return;
+
+			_StoreType _Val = _Xval ? -1 : 0;
+			this->_Store.resize(this->_ToUnits(_Xn), _Val);
+			_Size = _Xn;
+		}
+		template <class _InputIter, class =
+			typename ::std::enable_if < !::std::is_integral<_InputIter>::value
+			>::type>
+		vector(_InputIter _XiFirst, _InputIter _XiLast,
+			const _Alloc& _Xalloc = _Alloc())
+			:_MyTa(_Xalloc)
+		{
+			this->insert(this->begin(), _XiFirst, _XiLast);
+		}
+		vector(const _MyTa& _Xa)
+			:_Store(_Xa._Store)
+			,_Size(_Xa._Size)
+		{}
+		vector(_MyTa&& _Xa)
+			:_Store(::std::move(_Xa._Store))
+			,_Size(::std::move(_Xa._Size))
+		{}
+		vector(const _MyTa& _Xa, const _Alloc& _Xalloc)
+			:_Store(_Xa._Store, _Xalloc)
+			,_Size(_Xa._Size)
+		{}
+		vector(_MyTa&& _Xa, const _Alloc& _Xalloc)
+			:_Store(::std::move(_Xa._Store), _Xalloc)
+			,_Size(::std::move(_Xa._Size))
+		{}
+		vector(::std::initializer_list<bool> _Xelems,
+			const _Alloc& _Xalloc = _Alloc())
+			:_MyTa(_Xalloc)
+		{
+			this->insert(this->begin(), _Xelems.begin(), _Xelems.end());
+		}
+		~vector() = default;
+		_MyTa& operator=(const _MyTa& _Xa)
+		{
+			this->_Store = _Xa._Store;
+			this->_Size = _Xa._Size;
+			return *this;
+		}
+		_MyTa& operator=(_MyTa&& _Xa)
+		{
+			if (this != &_Xa)
+			{
+				this->clear();
+				this->_Store = ::std::move(_Xa._Store);
+				this->_Size = ::std::move(_Xa._Size);
+			}
+			return *this;
+		}
+		_MyTa operator=(::std::initializer_list<bool> _Xelems)
+		{
+			this->assign(_Xelems.begin(), _Xelems.end());
+			return *this;
+		}
+		template <class _InputIter, class =
+			typename ::std::enable_if < !::std::is_integral<_InputIter>::value
+			>::type>
+			void assign(_InputIter _XiFirst, _InputIter _XiLast)
+		{
+			this->erase(this->begin(), this->end());
+			this->insert(this->begin(), _XiFirst, _XiLast);
+		}
+		void assign(size_type _Xn, const bool& _Xval)
+		{
+			this->erase(this->begin(), this->end());
+			this->insert(this->begin(), _Xn, _Xval);
+		}
+		void assign(::std::initializer_list<bool> _Xelems)
+		{
+			this->assign(_Xelems.begin(), _Xelems.end());
+		}
+		allocator_type get_allocator() const noexcept
+		{
+			return this->_Store.get_allocator();
+		}
+
+		iterator begin() noexcept
+		{
+			return iterator(this->_Store.data(), 0);
+		}
+		const_iterator begin() const noexcept
+		{
+			return const_iterator(const_cast<_StoreType*>(this->_Store.data()), 0);
+		}
+		iterator end() noexcept
+		{
+			return this->begin() + this->size();
+		}
+		const_iterator end() const noexcept
+		{
+			return this->begin() + this->size();
+		}
+		reverse_iterator rbegin() noexcept
+		{
+			return reverse_iterator(this->end());
+		}
+		const_reverse_iterator rbegin() const noexcept
+		{
+			return const_reverse_iterator(this->end());
+		}
+		reverse_iterator rend() noexcept
+		{
+			return reverse_iterator(this->begin());
+		}
+		const_reverse_iterator rend() const noexcept
+		{
+			return const_reverse_iterator(this->begin());
+		}
+		const_iterator cbegin() const noexcept
+		{
+			return this->begin();
+		}
+		const_iterator cend() const noexcept
+		{
+			return this->end();
+		}
+		const_reverse_iterator crbegin() const noexcept
+		{
+			return this->rbegin();
+		}
+		const_reverse_iterator crend() const noexcept
+		{
+			return this->rend();
+		}
+
+		size_type size() const noexcept
+		{
+			return this->_Size;
+		}
+		size_type max_size() const noexcept
+		{
+			auto _MaxSize = this->_Store.max_size();
+			
+			return _MaxSize < size_type(-1) / _VecBoolBitCount ?
+				_MaxSize * _VecBoolBitCount : size_type(-1);
+		}
+		void resize(size_type _Xn, bool _Xval = false)
+		{
+			if (this->size() < _Xn)
+			{
+				this->insert(this->end(), _Xn - this->size(), _Xval);
+			}
+			else
+			{
+				this->erase(this->begin() + _Xn, this->end());
+			}
+		}
+		size_type capacity() const noexcept
+		{
+			return this->_Store.capacity() * _VecBoolBitCount;
+		}
+		bool empty() const noexcept
+		{
+			return this->_Size == size_type(0);
+		}
+		void reserve(size_type n)
+		{
+			this->_Store.reserve(this->_ToUnits(n));
+		}
+		void shrink_to_fit()
+		{
+			this->_Store.shrink_to_fit();
+		}
+		
+		reference operator[](size_type _Xn)
+		{
+			return *(this->begin() + _Xn);
+		}
+		const_reference operator[](size_type _Xn) const
+		{
+			return *(this->cbegin() + _Xn);
+		}
+		const_reference at(size_type _Xn) const
+		{
+			if (this->size() < _Xn)
+				throw ::std::out_of_range("_Xn >= size()");
+			return (*this)[_Xn];
+		}
+		reference at(size_type _Xn)
+		{
+			if (this->size() < _Xn)
+				throw ::std::out_of_range("_Xn >= size()");
+			return (*this)[_Xn];
+		}
+		reference front()
+		{
+			return *this->begin();
+		}
+		const_reference front() const
+		{
+			return *this->begin();
+		}
+		reference back()
+		{
+			return *(this->end() - 1);
+		}
+		const_reference back() const
+		{
+			return *(this->end() - 1);
+		}
+		
+		void push_back(const bool& x)
+		{
+			this->insert(this->end(), x);
+		}
+		void pop_back()
+		{
+			this->erase(this->end() - 1);
+		}
+		iterator insert(const_iterator _Xpos, const bool& _Xval)
+		{
+			return this->insert(_Xpos, size_type(1), _Xval);
+		}
+		iterator insert(const_iterator _Xpos, size_type _Xn, const bool& _Xval)
+		{
+			auto _Off = _MakeSpace(_Xpos, _Xn);
+			::std::fill(this->begin() + _Off, this->begin() + (_Off + _Xn),
+				_Xval);
+			return this->begin() + _Off;
+		}
+		template <class _InputIter, class =
+			typename ::std::enable_if < !::std::is_integral<_InputIter>::value
+			>::type>
+		iterator insert(const_iterator _Xpos, _InputIter _XiFirst, 
+						_InputIter _XiLast)
+		{
+			auto _Off = _Xpos - this->begin();
+			this->_InsertRange(_Xpos, _XiFirst, _XiLast,
+				typename ::std::iterator_traits<_InputIter>::iterator_category());
+			return this->begin() + _Off;
+		}
+		iterator insert(const_iterator _Xpos, 
+						::std::initializer_list<bool> _Xelems)
+		{
+			return this->insert(_Xpos, _Xelems.begin(), _Xelems.end());
+		}
+		iterator erase(const_iterator _Xpos)
+		{
+			return this->erase(_Xpos, _Xpos + 1);
+		}
+		iterator erase(const_iterator _XiFirst, const_iterator _Xilast)
+		{
+			auto _Dist = _Xilast - _XiFirst;
+			auto _Off = _XiFirst - this->cbegin();
+			auto _First = this->begin() + _Off;
+			auto _Last = this->begin() + (_Off + _Dist);
+
+			auto _Next = ::std::copy(_Last, this->end(), _First);
+			this->_Size -= _Dist;
+			auto _Count = this->_ToUnits(this->size());
+			if (_Count < this->_Store.size())
+			{
+				this->_Store.erase(this->_Store.begin() + _Count, 
+									this->_Store.end());
+			}
+			if (_Count != 0)
+			{
+				this->_Store[_Count - 1] &= (_StoreType(1) <<
+											this->_Size % _VecBoolBitCount) - 1;
+			}
+
+			return this->begin() + _Off;
+		}
+		void swap(_MyTa& _Xa)
+		{
+			using ::std::swap;
+
+			this->_Store.swap(_Xa._Store);
+			swap(this->_Size, _Xa._Size);
+		}
+		static void swap(reference _Xa, reference _Xb) noexcept
+		{
+			bool _Tmp = _Xa;
+			_Xa = _Xb;
+			_Xb = _Tmp;
+		}
+		void flip() noexcept
+		{
+			for (auto& _Xelem : this->_Store)
+			{
+				_Xelem = ~_Xelem;
+			}
+		}
+		void clear() noexcept
+		{
+			this->erase(this->begin(), this->end());
+		}
 	};
 }
 
