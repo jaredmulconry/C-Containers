@@ -9,6 +9,7 @@ void IteratorTest();
 void DimensionTest();
 void AccessorTest();
 void AddRemoveTest();
+void RelationalTest();
 
 template<typename T, typename A, int N>
 void PrintMyVec(const custom_std::vector<T, A>&, const char(&)[N]);
@@ -17,8 +18,8 @@ template<typename T>
 using allocator_type = MyMallocator<T>;
 template<typename T>
 using vec_type = custom_std::vector < T, allocator_type<T> >;
-template vec_type<int>;
-template vec_type<bool>;
+template class custom_std::vector < int, allocator_type<int> >;
+template class custom_std::vector < bool, allocator_type<bool> >;
 
 int main()
 {
@@ -30,6 +31,7 @@ int main()
 	DimensionTest();
 	AccessorTest();
 	AddRemoveTest();
+	RelationalTest();
 
 	std::cin.get();
 }
@@ -145,6 +147,19 @@ void AddRemoveTest()
 	vec_type<int> v2;
 	v2.swap(v1);
 	v2.clear();
+}
+void RelationalTest()
+{
+	vec_type<int> v1{ 3, 5, 6, 6, 9, 23, 11 };
+	vec_type<int> v2{ 3, 5, 6, 6, 9, 23, 15 };
+
+	v1 == v1;
+	v1 == v2;
+	v1 != v2;
+	v1 < v2;
+	v1 > v2;
+	v1 <= v1;
+	v2 >= v2;
 }
 
 template<typename T, typename A, int N>
