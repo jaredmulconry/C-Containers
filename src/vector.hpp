@@ -1679,7 +1679,7 @@ namespace custom_std
 		{
 			auto _Off = _Xpos - this->begin();
 
-			if (_Off == 0)
+			if (_Xn == 0)
 			{
 			}
 			else if (this->max_size() - this->size() < _Xn)
@@ -1744,7 +1744,9 @@ namespace custom_std
 		vector(_MyTa&& _Xa)
 			:_Store(::std::move(_Xa._Store))
 			,_Size(::std::move(_Xa._Size))
-		{}
+		{
+			_Xa._Size = 0;
+		}
 		vector(const _MyTa& _Xa, const _Alloc& _Xalloc)
 			:_Store(_Xa._Store, _Xalloc)
 			,_Size(_Xa._Size)
@@ -1752,7 +1754,9 @@ namespace custom_std
 		vector(_MyTa&& _Xa, const _Alloc& _Xalloc)
 			:_Store(::std::move(_Xa._Store), _Xalloc)
 			,_Size(::std::move(_Xa._Size))
-		{}
+		{
+			_Xa._Size = 0;
+		}
 		vector(::std::initializer_list<bool> _Xelems,
 			const _Alloc& _Xalloc = _Alloc())
 			:_MyTa(_Xalloc)
@@ -1773,6 +1777,7 @@ namespace custom_std
 				this->clear();
 				this->_Store = ::std::move(_Xa._Store);
 				this->_Size = ::std::move(_Xa._Size);
+				_Xa._Size = 0;
 			}
 			return *this;
 		}
