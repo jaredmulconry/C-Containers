@@ -1,3 +1,4 @@
+#include "dense_map.hpp"
 #include <iostream>
 #include "MyMallocator.hpp"
 #include <type_traits>
@@ -33,6 +34,7 @@ int main()
 	AddRemoveTest();
 	RelationalTest();
 
+	std::cout << "Tests complete!" << std::endl;
 	std::cin.get();
 }
 
