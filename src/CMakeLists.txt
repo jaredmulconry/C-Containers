@@ -1,8 +1,10 @@
 cmake_minimum_required (VERSION 3.1)
 project (containers)
 
-SET(CONTAINER_HEADER_FILES MyMallocator.hpp vector.hpp dense_map.hpp)
-SET(CONTAINER_SOURCE_FILES main.cpp)
+include(CTest)
+
+include_directories(${CMAKE_CURRENT_LIST_DIR})
+SET(CTEST_PARALLEL_LEVEL 2)
 
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
 	# using Clang
@@ -26,5 +28,11 @@ else()
 	message(FATAL_ERROR "Unknown c++ compiler target in use.")
 endif()
 
-add_executable(containers ${CONTAINER_HEADER_FILES} ${CONTAINER_SOURCE_FILES})
-install(TARGETS containers DESTINATION "build")
+#add_executable(containers ${CONTAINER_HEADER_FILES} ${CONTAINER_SOURCE_FILES})
+
+add_executable(vector_test MyMallocator.hpp vector.hpp test/vector_test.cpp)
+add_executable(dense_map_test MyMallocator.hpp dense_map.hpp test/dense_map_test.cpp)
+install(TARGETS vector_test dense_map_test)
+
+add_test(vectorTest vector_test)
+add_test(denseMapTest dense_map_test)
