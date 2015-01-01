@@ -32,13 +32,13 @@ struct MyMallocator
 
 	template<typename U>
 	inline
-		bool operator==(const MyMallocator<U>&)
+		bool operator==(const MyMallocator<U>&) const
 	{
 		return true;
 	}
 	template<typename U>
 	inline
-		bool operator!=(const MyMallocator<U>& o)
+		bool operator!=(const MyMallocator<U>& o) const
 	{
 		return !(*this == o);
 	}
