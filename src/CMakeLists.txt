@@ -32,7 +32,7 @@ endif()
 
 add_executable(vector_test MyMallocator.hpp vector.hpp test/vector_test.cpp)
 add_executable(dense_map_test MyMallocator.hpp dense_map.hpp test/dense_map_test.cpp)
-install(TARGETS vector_test dense_map_test)
+install(TARGETS vector_test dense_map_test DESTINATION "build")
 
 add_test(vectorTest vector_test)
 add_test(denseMapTest dense_map_test)
