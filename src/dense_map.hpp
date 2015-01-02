@@ -12,11 +12,9 @@
 
 namespace custom_containers
 {
-	template<typename Cont>
+	template<class Cont>
 	struct DenseMapConstIterator
 	{
-		friend typename Cont;
-
 		using iterator_category = std::random_access_iterator_tag;
 		using MyType = DenseMapConstIterator<Cont>;
 		using key_type = typename Cont::key_type;
@@ -27,6 +25,7 @@ namespace custom_containers
 		using key_pointer = typename Cont::key_const_pointer;
 		using value_pointer = typename Cont::value_const_pointer;
 		using reference = typename Cont::const_reference;
+		using pointer = typename Cont::const_pointer;
 		using value_type = typename Cont::value_type;
 		using Kpointer = typename Cont::KIterator;
 		using Vpointer = typename Cont::VIterator;
@@ -42,8 +41,8 @@ namespace custom_containers
 			, value(v)
 		{}
 		template<typename I, class =
-			typename ::std::enable_if_t < std::is_base_of<MyType, I>::value >>
-			explicit DenseMapConstIterator(const I& i) noexcept
+			std::enable_if_t < std::is_base_of<MyType, I>::value >>
+		explicit DenseMapConstIterator(const I& i) noexcept
 			: MyType(static_cast<const MyType&>(i))
 		{}
 		DenseMapConstIterator& operator=(const MyType&) noexcept = default;
@@ -148,13 +147,12 @@ namespace custom_containers
 			return !(x < y);
 		}
 	};
-	template<typename Cont>
+	template<class Cont>
 	struct DenseMapIterator : public DenseMapConstIterator<Cont>
 	{
-		friend typename Cont;
-		using iterator_category = std::random_access_iterator_tag;
 		using MyType = DenseMapIterator<Cont>;
 		using MyBase = DenseMapConstIterator<Cont>;
+		using iterator_category = typename MyBase::iterator_category;
 		using key_type = typename MyBase::key_type;
 		using mapped_type = typename MyBase::mapped_type;
 		using difference_type = typename MyBase::difference_type;
@@ -163,6 +161,7 @@ namespace custom_containers
 		using key_pointer = typename Cont::key_pointer;
 		using value_pointer = typename Cont::value_pointer;
 		using reference = typename Cont::reference;
+		using pointer = typename Cont::pointer;
 		using value_type = typename Cont::value_type;
 		using Kpointer = typename MyBase::Kpointer;
 		using Vpointer = typename MyBase::Vpointer;
@@ -188,7 +187,7 @@ namespace custom_containers
 
 		reference operator*() const
 		{
-			return reference(key_reference(*key), value_reference(*value));
+			return reference(key_reference(*MyBase::key), value_reference(*MyBase::value));
 		}
 
 		MyType& operator++()
@@ -315,6 +314,8 @@ namespace custom_containers
 		using reference = std::pair<key_const_reference, value_reference>;
 		using const_reference = std::pair<key_const_reference,
 			value_const_reference>;
+		using pointer = reference;
+		using const_pointer = const_reference;
 
 		using value_type = std::pair<const key_type, mapped_type>;
 		using size_type = std::common_type_t<
@@ -1025,12 +1026,13 @@ namespace custom_containers
 		}
 		iterator erase(const_iterator first, const_iterator last)
 		{
-			auto offset = first - cbegin();
+			auto bOffset = first - cbegin();
+			auto eOffset = last - cbegin();
 
-			keys.erase(first.key, last.key);
-			values.erase(first.value, last.value);
+			keys.erase(keys.cbegin() + bOffset, keys.cbegin() + eOffset);
+			values.erase(values.cbegin() + bOffset, values.cbegin() + eOffset);
 
-			return begin() + offset;
+			return begin() + bOffset;
 		}
 
 		void clear()
