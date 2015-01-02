@@ -85,6 +85,7 @@ void AssignmentTest()
 }
 void IteratorTest()
 {
+	int a = 33;
 	auto init = std::initializer_list<value_type<int, int>>
 	{ { 3, 5 }, { 2, 4 }, { 1, 1 }, { 4, 4 }, { 1, 3 } };
 
@@ -108,7 +109,7 @@ void IteratorTest()
 	(void)v.crbegin_values();
 	(void)v.crend_values();
 
-	(void)*i1, (void)*i3, (void)*i5, (void)*i7;
+	(*i1).second = a, (*i3).second = a, (void)*i5, (void)*i7;
 	(void)++i1, (void)++i3, (void)++i5, (void)++i7;
 	(void)i1++, (void)i3++, (void)i5++, (void)i7++;
 	(void)--i1, (void)--i3, (void)--i5, (void)--i7;
