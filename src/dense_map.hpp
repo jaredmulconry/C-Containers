@@ -26,9 +26,8 @@ namespace custom_containers
 		using value_reference = typename Cont::value_const_reference;
 		using key_pointer = typename Cont::key_const_pointer;
 		using value_pointer = typename Cont::value_const_pointer;
-		using reference = std::pair<key_reference, value_reference>;
-		using pointer = std::pair<key_reference, value_reference>;
-		using value_type = reference;
+		using reference = typename Cont::const_reference;
+		using value_type = typename Cont::value_type;
 		using Kpointer = typename Cont::KIterator;
 		using Vpointer = typename Cont::VIterator;
 	protected:
@@ -163,8 +162,8 @@ namespace custom_containers
 		using value_reference = typename Cont::value_reference;
 		using key_pointer = typename Cont::key_pointer;
 		using value_pointer = typename Cont::value_pointer;
-		using reference = std::pair<key_reference, value_reference>;
-		using value_type = reference;
+		using reference = typename Cont::reference;
+		using value_type = typename Cont::value_type;
 		using Kpointer = typename MyBase::Kpointer;
 		using Vpointer = typename MyBase::Vpointer;
 	private:
@@ -289,46 +288,45 @@ namespace custom_containers
 	public:
 		using MyType = DenseMap<Key, T, Compare, KeyAllocator,
 			ValueAllocator>;
-		using KAllocTraits = std::allocator_traits<KeyAllocator>;
-		using KeyAlloc = typename KAllocTraits::template rebind_alloc<Key>;
-		using KeyAllocTraits = std::allocator_traits<KeyAlloc>;
-		using VAllocTraits = std::allocator_traits<ValueAllocator>;
-		using ValueAlloc = typename KAllocTraits::template rebind_alloc<T>;
-		using ValueAllocTraits = std::allocator_traits<ValueAlloc>;
-		using allocator_type = std::pair<KeyAlloc, ValueAlloc>;
+
+		using KStorage = std::vector<Key, KeyAllocator>;
+		using VStorage = std::vector<T, ValueAllocator>;
+		using KIterator = typename KStorage::iterator;
+		using VIterator = typename VStorage::iterator;
+
+		using allocator_type = std::pair<typename KStorage::allocator_type,
+										typename VStorage::allocator_type>;
 
 		using key_type = Key;
 		using mapped_type = T;
 
 		using key_compare = Compare;
 
-		using key_reference = std::reference_wrapper<key_type>;
-		using key_const_reference = std::reference_wrapper<const key_type>;
-		using key_pointer = typename KeyAllocTraits::pointer;
-		using key_const_pointer = typename KeyAllocTraits::const_pointer;
+		using key_reference = typename KStorage::reference;
+		using key_const_reference = typename KStorage::const_reference;
+		using key_pointer = typename KStorage::pointer;
+		using key_const_pointer = typename KStorage::const_pointer;
 
-		using value_reference = std::reference_wrapper<mapped_type>;
-		using value_const_reference = std::reference_wrapper<const mapped_type>;
-		using value_pointer = typename ValueAllocTraits::pointer;
-		using value_const_pointer = typename ValueAllocTraits::const_pointer;
+		using value_reference = typename VStorage::reference;
+		using value_const_reference = typename VStorage::const_reference;
+		using value_pointer = typename VStorage::pointer;
+		using value_const_pointer = typename VStorage::const_pointer;
 
 		using reference = std::pair<key_const_reference, value_reference>;
 		using const_reference = std::pair<key_const_reference,
 			value_const_reference>;
-		using InternalReference = std::pair<key_reference, value_reference>;
 
 		using value_type = std::pair<const key_type, mapped_type>;
-		using size_type = typename ValueAllocTraits::size_type;
-		using difference_type = typename ValueAllocTraits::difference_type;
+		using size_type = std::common_type_t<
+							typename KStorage::size_type,
+							typename VStorage::size_type>;
+		using difference_type = std::common_type_t<
+									typename KStorage::difference_type,
+									typename VStorage::difference_type>;
 		using iterator = DenseMapIterator<MyType>;
 		using const_iterator = DenseMapConstIterator<MyType>;
 		using reverse_iterator = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
-
-		using KStorage = std::vector<Key, KeyAlloc>;
-		using VStorage = std::vector<T, ValueAlloc>;
-		using KIterator = typename KStorage::iterator;
-		using VIterator = typename VStorage::iterator;
 
 		class value_compare
 		{
@@ -971,8 +969,7 @@ namespace custom_containers
 				}
 				else if (!cmp.comp(key, (*prev).first))
 				{
-					static_cast<mapped_type&>((*prev).second) = 
-													std::forward<U>(value);
+					(*prev).second = std::forward<U>(value);
 					return prev;
 				}
 			}
@@ -1003,15 +1000,13 @@ namespace custom_containers
 					}
 					else if (!cmp.comp(key, (*prev).first))
 					{
-						static_cast<mapped_type&>((*prev).second) = 
-													std::forward<U>(value);
+						(*prev).second = std::forward<U>(value);
 						return prev;
 					}
 				}
 				else if (cmp.comp((*position).first, key))
 				{
-					static_cast<mapped_type&>((*position).second) = 
-													std::forward<U>(value);
+					(*position).second = std::forward<U>(value);
 					return position;
 				}
 			}
@@ -1040,8 +1035,7 @@ namespace custom_containers
 
 		void clear()
 		{
-			keys.clear();
-			values.clear();
+			CleanUp();
 		}
 		void swap(MyType& other)
 		{
