@@ -408,7 +408,6 @@ namespace custom_containers
 			}
 
 			ReserveSpace(dist);
-			auto prevSize = keys.size();
 
 			keys.insert(keys.cend(), kfirst, klast);
 			values.insert(values.cend(), vfirst, vlast);
