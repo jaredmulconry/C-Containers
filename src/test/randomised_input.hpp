@@ -5,24 +5,20 @@
 #include <iterator>
 #include <limits>
 #include <random>
+#include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
 
 namespace InputRandomiser
 {
+	template<typename T>
+	inline std::vector<T> GetInput(std::ptrdiff_t);
 	namespace detail
 	{
-		template<typename T>
-		void generate_random_input(std::ptrdiff_t n, std::vector<T>& res)
-		{
-			static_assert(false, "No specialisation of generate_random_input for provided type.");
-
-			return std::vector<T>{};
-		}
 		template<typename T, typename Traits, typename Alloc>
-		void generate_random_input(std::ptrdiff_t n, 
-						std::vector<std::basic_string<T, Traits, Alloc>>& res)
+		void generate_random_input(std::ptrdiff_t n,
+			std::vector<std::basic_string<T, Traits, Alloc>>& res)
 		{
 			static const std::ptrdiff_t textLength = 32;
 			std::vector<T> inputText;
@@ -41,7 +37,8 @@ namespace InputRandomiser
 			res.reserve(n);
 
 			using num_traits = std::numeric_limits<T>;
-			static std::uniform_int_distribution<T> dist{ num_traits::lowest(), 
+			static thread_local std::uniform_int_distribution<T> dist{ 
+													num_traits::lowest(), 
 													num_traits::max() };
 
 			std::generate_n(std::back_inserter(res), n, [&rng]()
@@ -87,7 +84,7 @@ namespace InputRandomiser
 			res.reserve(n);
 
 			//33 to 126
-			static std::uniform_int_distribution<short> dist{ 33, 126 };
+			static thread_local std::uniform_int_distribution<short> dist{ 33, 126 };
 
 			for (std::ptrdiff_t i = 0; i < n; ++i)
 			{
@@ -103,10 +100,10 @@ namespace InputRandomiser
 			std::vector<T> res;
 
 			using num_traits = std::numeric_limits<T>;
-			std::uniform_real_distribution<T> dist{num_traits::lowest(),
-													num_traits::max()};
+			static thread_local std::uniform_real_distribution<T> dist{num_traits::lowest(),
+																num_traits::max()};
 
-			std::generate_n(std::back_inserter(res), n, [&rng, dist]()
+			std::generate_n(std::back_inserter(res), n, [&rng]()
 			{
 				return dist(rng);
 			});
@@ -118,9 +115,10 @@ namespace InputRandomiser
 		//T is Arithmetic
 		inline std::vector<T> GetInputInternal(std::ptrdiff_t n, std::true_type)
 		{
-			static std::mt19937 rng;
+			static thread_local std::mt19937 rng;
 			return GetInputNumeric<T>(n, rng, typename std::is_integral<T>::type());
 		}
+
 		template<typename T>
 		//T is not Arithmetic
 		std::vector<T> GetInputInternal(std::ptrdiff_t n, std::false_type)
