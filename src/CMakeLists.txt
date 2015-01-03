@@ -4,14 +4,15 @@ project (containers)
 include(CTest)
 
 include_directories(${CMAKE_CURRENT_LIST_DIR})
-SET(CTEST_PARALLEL_LEVEL 2)
 
 add_executable(vector_test MyMallocator.hpp vector.hpp test/vector_test.cpp)
 add_executable(dense_map_test MyMallocator.hpp dense_map.hpp test/dense_map_test.cpp)
+add_executable(dense_map_perf MyMallocator.hpp dense_map.hpp test/randomised_input.hpp test/dense_map_perf.cpp)
 install(TARGETS vector_test dense_map_test DESTINATION "build")
 
 add_test(vectorTest vector_test)
 add_test(denseMapTest dense_map_test)
+add_test(denseMapPerf dense_map_perf)
 
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
 	# using Clang
@@ -34,7 +35,7 @@ elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
 	add_definitions(-D_ITERATOR_DEBUG_LEVEL=0)
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /sdl /MP")
 	SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Ox /GL")
-	set_target_properties(vector_test dense_map_test PROPERTIES LINK_FLAGS_RELEASE "/LTCG")
+	set_target_properties(vector_test dense_map_test dense_map_perf PROPERTIES LINK_FLAGS_RELEASE "/LTCG")
 else()
 	# unknown c++ compiler in use
 	message(FATAL_ERROR "Unknown c++ compiler target in use.")
