@@ -4,6 +4,9 @@ project (containers)
 include(CTest)
 
 include_directories(${CMAKE_CURRENT_LIST_DIR})
+get_filename_component(SOURCE_DIRECTORY_PARENT "${CMAKE_SOURCE_DIR}" DIRECTORY)
+SET(MY_OWN_INSTALL_PREFIX "${SOURCE_DIRECTORY_PARENT}" CACHE PATH "Prefix prepended to install directories")
+SET(CMAKE_INSTALL_PREFIX "${MY_OWN_INSTALL_PREFIX}" CACHE INTERNAL "Prefix prepended to install directories" FORCE)
 
 add_executable(vector_test MyMallocator.hpp vector.hpp test/vector_test.cpp)
 add_executable(dense_map_test MyMallocator.hpp dense_map.hpp test/dense_map_test.cpp)
@@ -34,11 +37,9 @@ elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
 	endif()
 	add_definitions(-D_ITERATOR_DEBUG_LEVEL=0)
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /sdl /MP")
-	SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Ox /GL")
+	SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Ox /Oi /GL")
 	set_target_properties(vector_test dense_map_test dense_map_perf PROPERTIES LINK_FLAGS_RELEASE "/LTCG")
 else()
 	# unknown c++ compiler in use
 	message(FATAL_ERROR "Unknown c++ compiler target in use.")
 endif()
-
-
