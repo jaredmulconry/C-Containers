@@ -4,9 +4,11 @@
 #include <chrono>
 #include <cstddef>
 #include <functional>
+#include <future>
 #include <iostream>
 #include <map>
 #include <string>
+#include <thread>
 #include <vector>
 
 using timings_type = std::map<std::string, std::chrono::microseconds>;
@@ -63,16 +65,15 @@ void GetTimings(timings_type& times)
 {
 	using key_type = typename C::key_type;
 	using mapped_type = typename C::mapped_type;
-	using value_type = typename C::value_type;
 
 	using namespace std::chrono;
 
-	/*{
-		const int inputSize = 64 * 1024;
+	{
+		const int inputSize = 32 * 1024;
 		auto keyInput = InputRandomiser::GetInput<key_type>(inputSize);
 		auto valueInput = InputRandomiser::GetInput<mapped_type>(inputSize);
 		auto kBegin = keyInput.begin(); auto kEnd = keyInput.end();
-		auto vBegin = valueInput.begin(); auto vEnd = valueInput.end();
+		auto vBegin = valueInput.begin();
 		C cont;
 
 		auto start = high_resolution_clock::now();
@@ -83,14 +84,14 @@ void GetTimings(timings_type& times)
 		auto finish = high_resolution_clock::now();
 		auto elapsedTime = duration_cast<microseconds>(finish - start);
 
-		times.insert(std::make_pair("64 * 1024 key-value inserts", elapsedTime));
+		times.insert(std::make_pair("32 * 1024 key-value inserts", elapsedTime));
 	}
 	{
-		const int inputSize = 64 * 1024;
+		const int inputSize = 32 * 1024;
 		auto keyInput = InputRandomiser::GetInput<key_type>(inputSize);
 		auto valueInput = InputRandomiser::GetInput<mapped_type>(inputSize);
 		auto kBegin = keyInput.begin(); auto kEnd = keyInput.end();
-		auto vBegin = valueInput.begin(); auto vEnd = valueInput.end();
+		auto vBegin = valueInput.begin();
 		C cont;		
 
 		auto start = high_resolution_clock::now();
@@ -103,14 +104,14 @@ void GetTimings(timings_type& times)
 		auto finish = high_resolution_clock::now();
 		auto elapsedTime = duration_cast<microseconds>(finish - start);
 
-		times.insert(std::make_pair("64 * 1024 key-value inserts (w/ reserve)", elapsedTime));
-	}*/
+		times.insert(std::make_pair("32 * 1024 key-value inserts (w/ reserve)", elapsedTime));
+	}
 	{
-		const int inputSize = 256 * 1024;
+		const int inputSize = 32 * 1024;
 		auto keyInput = InputRandomiser::GetInput<key_type>(inputSize);
 		auto valueInput = InputRandomiser::GetInput<mapped_type>(inputSize);
 		auto kBegin = keyInput.begin(); auto kEnd = keyInput.end();
-		auto vBegin = valueInput.begin(); auto vEnd = valueInput.end();
+		auto vBegin = valueInput.begin();
 		C cont;
 
 		std::sort(kBegin, kEnd, std::greater_equal<>());
@@ -125,34 +126,69 @@ void GetTimings(timings_type& times)
 		auto finish = high_resolution_clock::now();
 		auto elapsedTime = duration_cast<microseconds>(finish - start);
 
-		times.insert(std::make_pair("64 * 1024 key-value inserts vs append", elapsedTime));
+		times.insert(std::make_pair("32 * 1024 key-value inserts vs append", elapsedTime));
+	}
+}
+
+template<typename C>
+std::string RunTest(const char* name)
+{
+	std::string ret;
+	timings_type times;
+	GetTimings<C>(times);
+
+	ret += name;
+	ret.push_back('\n');
+	for (const auto& x : times)
+	{
+		ret += x.first;
+		ret.push_back(' ');
+		ret += std::to_string(x.second.count());
+		ret += "us\n";
+	}
+	
+	return ret;
+}
+
+void DumpResults(std::vector<std::future<std::string>>& x)
+{
+	using namespace std::literals;
+
+	auto remaining = x.size();
+	while (remaining != 0)
+	{
+		for (auto& o : x)
+		{
+			if (o.valid())
+			{
+				auto status = o.wait_for(10ms);
+				if (status != std::future_status::timeout)
+				{
+					--remaining;
+					std::cout << o.get();
+				}
+			}
+		}
+
+		std::this_thread::yield();
 	}
 }
 
 int main()
 {
-	using namespace std;
+	std::vector<std::future<std::string>> timingResults;
 
-	timings_type times;
-	{
-		GetTimings<std_map<int, int>>(times);
+	timingResults.push_back(std::async(RunTest<std_map<int, int>>, "std_map<int, int>"));
+	timingResults.push_back(std::async(RunTest<dense_map<int, int>>, "dense_map<int, int>"));
+	
+	timingResults.push_back(std::async(RunTest<std_map<std::string, int>>, "std_map<std::string, int>"));
+	timingResults.push_back(std::async(RunTest<dense_map<std::string, int>>, "dense_map<std::string, int>"));
+	
+	timingResults.push_back(std::async(RunTest<std_map<int, std::string>>, "std_map<int, std::string>"));
+	timingResults.push_back(std::async(RunTest<dense_map<int, std::string>>, "dense_map<int, std::string>"));
+	
+	timingResults.push_back(std::async(RunTest<std_map<std::string, std::string>>, "std_map<std::string, std::string>"));
+	timingResults.push_back(std::async(RunTest<dense_map<std::string, std::string>>, "dense_map<std::string, std::string>"));
 
-		cout << "std::map" << endl;
-		for (const auto& x : times)
-		{
-			cout << x.first << ' ' << x.second.count() << endl;
-		}
-	}
-
-	times.clear();
-
-	{
-		GetTimings<dense_map<int, int>>(times);
-
-		cout << "dense_map" << endl;
-		for (const auto& x : times)
-		{
-			cout << x.first << ' ' << x.second.count() << endl;
-		}
-	}
+	DumpResults(timingResults);
 }
