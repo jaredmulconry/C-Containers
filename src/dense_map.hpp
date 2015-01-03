@@ -374,13 +374,13 @@ namespace custom_containers
 		{
 			auto offset = pos - cbegin();
 
-			keys.emplace(keys.cbegin() + offset, std::forward<K>(key));
-			values.emplace(values.cbegin() + offset, std::forward<U>(value));
+			keys.insert(keys.cbegin() + offset, std::forward<K>(key));
+			values.insert(values.cbegin() + offset, std::forward<U>(value));
 
 			return begin() + offset;
 		}
 		template<typename I1, typename I2>
-		void InsertRange(I1 kfirst, I1 klast, I2 vfirst, I2 vlast,
+		void AppendRange(I1 kfirst, I1 klast, I2 vfirst, I2 vlast,
 			std::input_iterator_tag, std::input_iterator_tag)
 		{
 			auto keyPrevSize = keys.size();
@@ -396,11 +396,9 @@ namespace custom_containers
 
 				throw std::length_error("insert of ranges with different lengths.");
 			}
-
-			MakeOrdered(keyPrevSize);
 		}
 		template<typename I1, typename I2>
-		void InsertRange(I1 kfirst, I1 klast, I2 vfirst, I2 vlast,
+		void AppendRange(I1 kfirst, I1 klast, I2 vfirst, I2 vlast,
 			std::forward_iterator_tag, std::forward_iterator_tag)
 		{
 			auto dist = std::distance(kfirst, klast);
@@ -414,6 +412,13 @@ namespace custom_containers
 
 			keys.insert(keys.cend(), kfirst, klast);
 			values.insert(values.cend(), vfirst, vlast);
+		}
+		template<typename I1, typename I2, typename Tag1, typename Tag2>
+		void InsertRange(I1 kfirst, I1 klast, I2 vfirst, I2 vlast,
+			Tag1, Tag2)
+		{
+			auto prevSize = size();
+			AppendRange(kfirst, klast, vfirst, vlast, Tag1{}, Tag2{});
 
 			MakeOrdered(prevSize);
 		}
@@ -470,8 +475,8 @@ namespace custom_containers
 				uniqueMappingEnd,
 				[&tmpKeys, &tmpValues](mapping_type& x)
 			{
-				tmpKeys.push_back(std::move_if_noexcept(*x.first));
-				tmpValues.push_back(std::move_if_noexcept(*x.second));
+				tmpKeys.push_back(std::move(*x.first));
+				tmpValues.push_back(std::move(*x.second));
 			});
 
 			keys = std::move(tmpKeys);
@@ -834,6 +839,26 @@ namespace custom_containers
 			}
 		}
 
+		
+		template<typename M>
+		void append(M&& x)
+		{
+			return append(std::forward<M>(x).first, std::forward<M>(x).second);
+		}
+		template <typename K, typename U>
+		void append(K&& key, U&& value)
+		{
+			keys.push_back(std::forward<K>(key));
+			values.push_back(std::forward<U>(value));
+		}
+		template<typename I1, typename I2>
+		iterator append(I1 kfirst, I1 klast, I2 vfirst, I2 vlast)
+		{
+			AppendRange(kfirst, klast, vfirst, vlast,
+				typename std::iterator_traits<I1>::iterator_category(),
+				typename std::iterator_traits<I2>::iterator_category());
+		}
+
 		template<typename M>
 		std::pair<iterator, bool> insert(M&& x)
 		{
@@ -1035,6 +1060,11 @@ namespace custom_containers
 			return begin() + bOffset;
 		}
 
+		//n is size() prior to appending elements
+		void make_ordered(size_type n = 0u)
+		{
+			MakeOrdered(n);
+		}
 		void clear()
 		{
 			CleanUp();
