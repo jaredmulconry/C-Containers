@@ -70,7 +70,7 @@ namespace test_helpers
 		return data;
 	}
 
-	void DumpResults(const std::vector<test_helpers::TestData>& data);
+	void DumpResults(const std::vector<TestData>& data);
 }
 
 #endif //TEST_HELPERS_HPP
