@@ -1,17 +1,17 @@
 #include "dense_map.hpp"
+#include "test_helpers.hpp"
 #include "MyMallocator.hpp"
 #include "randomised_input.hpp"
+#include <algorithm>
 #include <chrono>
 #include <cstddef>
 #include <functional>
 #include <future>
-#include <iostream>
+#include <iterator>
 #include <map>
 #include <string>
 #include <thread>
 #include <vector>
-
-using timings_type = std::map<std::string, std::chrono::microseconds>;
 
 template<typename K, typename T>
 using std_map = std::map<K, T, std::less<>, MyMallocator<std::pair<const K, T>>>;
@@ -21,174 +21,220 @@ using dense_map = custom_containers::DenseMap < K, T, std::less<>,
 										MyMallocator<K>, MyMallocator < T >> ;
 
 template<typename K, typename T>
-void reserve(dense_map<K, T>& x, std::ptrdiff_t n)
+inline void reserve(dense_map<K, T>& x, std::ptrdiff_t n)
 {
 	x.reserve(n);
 }
 template<typename K, typename T>
-void reserve(std_map<K, T>&, std::ptrdiff_t)
+inline void reserve(std_map<K, T>&, std::ptrdiff_t)
 {}
 
 template<typename K, typename T>
-void make_ordered(dense_map<K, T>& x, std::ptrdiff_t prevSize)
+inline void make_ordered(dense_map<K, T>& x, std::ptrdiff_t prevSize)
 {
 	x.make_ordered(prevSize);
 }
 template<typename K, typename T>
-void make_ordered(std_map<K, T>&, std::ptrdiff_t)
+inline void make_ordered(std_map<K, T>&, std::ptrdiff_t)
 {}
 
-template<typename Key, typename Val, typename K, typename T>
-std::pair<typename std_map<Key, Val>::iterator, bool> insert_element(std_map<Key, Val>& c, K&& k, T&& v)
+struct insert_element
 {
-	return c.insert(std::make_pair(std::forward<K>(k), std::forward<T>(v)));
-}
-template<typename Key, typename Val, typename K, typename T>
-std::pair<typename dense_map<Key, Val>::iterator, bool> insert_element(dense_map<Key, Val>& c, K&& k, T&& v)
-{
-	return c.insert(std::forward<K>(k), std::forward<T>(v));
-}
+	template<typename Key, typename Val, typename K, typename T>
+	inline std::pair<typename std_map<Key, Val>::iterator, bool> operator()
+									(std_map<Key, Val>& c, K&& k, T&& v) const
+	{
+		return c.insert(std::make_pair(std::forward<K>(k), std::forward<T>(v)));
+	}
+	template<typename Key, typename Val, typename K, typename T>
+	inline std::pair<typename dense_map<Key, Val>::iterator, bool> operator()
+									(dense_map<Key, Val>& c, K&& k, T&& v) const
+	{
+		return c.insert(std::forward<K>(k), std::forward<T>(v));
+	}
+};
 
-template<typename Key, typename Val, typename K, typename T>
-void append_element(std_map<Key, Val>& c, K&& k, T&& v)
+struct append_element
 {
-	insert_element(c, std::forward<K>(k), std::forward<T>(v));
-}
-template<typename Key, typename Val, typename K, typename T>
-void append_element(dense_map<Key, Val>& c, K&& k, T&& v)
+	using result_type = void;
+
+	template<typename Key, typename Val, typename K, typename T>
+	inline void operator()(std_map<Key, Val>& c, K&& k, T&& v) const
+	{
+		insert_element{}(c, std::forward<K>(k), std::forward<T>(v));
+	}
+	template<typename Key, typename Val, typename K, typename T>
+	inline void operator()(dense_map<Key, Val>& c, K&& k, T&& v) const
+	{
+		c.append(std::forward<K>(k), std::forward<T>(v));
+	}
+};
+
+template<typename C, typename I1, typename I2, typename Op>
+void ExecuteTestCase(test_helpers::timings_type& times, const std::string& testName, 
+	I1 first1, I1 last1, I2 first2, Op&& op)
 {
-	c.append(std::forward<K>(k), std::forward<T>(v));
+	using namespace std::chrono;
+	C cont;
+
+	auto start = high_resolution_clock::now();
+	op(cont, first1, last1, first2);
+	auto finish = high_resolution_clock::now();
+	auto elapsedTime = duration_cast<microseconds>(finish - start);
+
+	times.insert(times.cend(), std::make_pair(testName, elapsedTime));
 }
 
 template<typename C>
-void GetTimings(timings_type& times)
+void GetTimings(test_helpers::timings_type& times, std::ptrdiff_t inputSize)
 {
 	using key_type = typename C::key_type;
 	using mapped_type = typename C::mapped_type;
 
-	using namespace std::chrono;
+	const auto keyInput = InputRandomiser::GetInput<key_type>(inputSize);
+	const auto valueInput = InputRandomiser::GetInput<mapped_type>(inputSize);
 
-	{
-		const int inputSize = 32 * 1024;
-		auto keyInput = InputRandomiser::GetInput<key_type>(inputSize);
-		auto valueInput = InputRandomiser::GetInput<mapped_type>(inputSize);
-		auto kBegin = keyInput.begin(); auto kEnd = keyInput.end();
-		auto vBegin = valueInput.begin();
-		C cont;
+	auto sortedKeyInput = keyInput;
+	std::sort(std::begin(sortedKeyInput), std::end(sortedKeyInput),
+				typename C::key_compare());
 
-		auto start = high_resolution_clock::now();
-		for (; kBegin != kEnd; ++kBegin, ++vBegin)
+	//insert tests
+	ExecuteTestCase<C>(times, "insert", 
+			keyInput.begin(), keyInput.end(), valueInput.begin(),
+		[](C& c, auto first1, auto last1, auto first2)
 		{
-			insert_element(cont, *kBegin, *vBegin);
-		}
-		auto finish = high_resolution_clock::now();
-		auto elapsedTime = duration_cast<microseconds>(finish - start);
+			test_helpers::DualRangeApply(c, first1, last1, first2, insert_element{});
+		});
 
-		times.insert(std::make_pair("32 * 1024 key-value inserts", elapsedTime));
+	ExecuteTestCase<C>(times, "insert sorted",
+			sortedKeyInput.begin(), sortedKeyInput.end(), valueInput.begin(),
+		[](C& c, auto first1, auto last1, auto first2)
+	{
+		test_helpers::DualRangeApply(c, first1, last1, first2, insert_element{});
+	});
+	{
+		auto kInput = keyInput; auto vInput = valueInput;
+		ExecuteTestCase<C>(times, "insert move",
+				kInput.begin(), kInput.end(), vInput.begin(),
+			[](C& c, auto first1, auto last1, auto first2)
+		{
+			test_helpers::DualRangeApply(c, std::make_move_iterator(first1),
+								std::make_move_iterator(last1), 
+								std::make_move_iterator(first2), 
+								insert_element{});
+		});
 	}
+	ExecuteTestCase<C>(times, "insert (w/ reserve)",
+		keyInput.begin(), keyInput.end(), valueInput.begin(),
+		[&inputSize](C& c, auto first1, auto last1, auto first2)
 	{
-		const int inputSize = 32 * 1024;
-		auto keyInput = InputRandomiser::GetInput<key_type>(inputSize);
-		auto valueInput = InputRandomiser::GetInput<mapped_type>(inputSize);
-		auto kBegin = keyInput.begin(); auto kEnd = keyInput.end();
-		auto vBegin = valueInput.begin();
-		C cont;		
-
-		auto start = high_resolution_clock::now();
-
-		reserve(cont, inputSize);
-		for (; kBegin != kEnd; ++kBegin, ++vBegin)
+		reserve(c, inputSize);
+		test_helpers::DualRangeApply(c, first1, last1, first2, insert_element{});
+	});
+	ExecuteTestCase<C>(times, "insert (w/ reserve) sorted",
+		sortedKeyInput.begin(), sortedKeyInput.end(), valueInput.begin(),
+		[&inputSize](C& c, auto first1, auto last1, auto first2)
+	{
+		reserve(c, inputSize);
+		test_helpers::DualRangeApply(c, first1, last1, first2, insert_element{});
+	});
+	{
+		auto kInput = keyInput; auto vInput = valueInput;
+		ExecuteTestCase<C>(times, "insert (w/ reserve) move",
+			kInput.begin(), kInput.end(), vInput.begin(),
+			[&inputSize](C& c, auto first1, auto last1, auto first2)
 		{
-			insert_element(cont, *kBegin, *vBegin);
-		}
-		auto finish = high_resolution_clock::now();
-		auto elapsedTime = duration_cast<microseconds>(finish - start);
-
-		times.insert(std::make_pair("32 * 1024 key-value inserts (w/ reserve)", elapsedTime));
+			reserve(c, inputSize);
+			test_helpers::DualRangeApply(c, std::make_move_iterator(first1),
+								std::make_move_iterator(last1), 
+								std::make_move_iterator(first2), 
+								insert_element{});
+		});
 	}
+
+	//append tests
+	ExecuteTestCase<C>(times, "append",
+		keyInput.begin(), keyInput.end(), valueInput.begin(),
+		[](C& c, auto first1, auto last1, auto first2)
 	{
-		const int inputSize = 32 * 1024;
-		auto keyInput = InputRandomiser::GetInput<key_type>(inputSize);
-		auto valueInput = InputRandomiser::GetInput<mapped_type>(inputSize);
-		auto kBegin = keyInput.begin(); auto kEnd = keyInput.end();
-		auto vBegin = valueInput.begin();
-		C cont;
+		test_helpers::DualRangeApply(c, first1, last1, first2, append_element{});
+	});
 
-		std::sort(kBegin, kEnd, std::greater_equal<>());
-
-		auto start = high_resolution_clock::now();
-		reserve(cont, inputSize);
-		for (; kBegin != kEnd; ++kBegin, ++vBegin)
+	ExecuteTestCase<C>(times, "append sorted",
+		sortedKeyInput.begin(), sortedKeyInput.end(), valueInput.begin(),
+		[](C& c, auto first1, auto last1, auto first2)
+	{
+		test_helpers::DualRangeApply(c, first1, last1, first2, append_element{});
+	});
+	{
+		auto kInput = keyInput; auto vInput = valueInput;
+		ExecuteTestCase<C>(times, "append move",
+			kInput.begin(), kInput.end(), vInput.begin(),
+			[](C& c, auto first1, auto last1, auto first2)
 		{
-			append_element(cont, *kBegin, *vBegin);
-		}
-		make_ordered(cont, 0);
-		auto finish = high_resolution_clock::now();
-		auto elapsedTime = duration_cast<microseconds>(finish - start);
-
-		times.insert(std::make_pair("32 * 1024 key-value inserts vs append", elapsedTime));
+			test_helpers::DualRangeApply(c, std::make_move_iterator(first1),
+							std::make_move_iterator(last1), 
+							std::make_move_iterator(first2), 
+							append_element{});
+		});
+	}
+	ExecuteTestCase<C>(times, "append (w/ reserve)",
+		keyInput.begin(), keyInput.end(), valueInput.begin(),
+		[&inputSize](C& c, auto first1, auto last1, auto first2)
+	{
+		reserve(c, inputSize);
+		test_helpers::DualRangeApply(c, first1, last1, first2, append_element{});
+	});
+	ExecuteTestCase<C>(times, "append (w/ reserve) sorted",
+		sortedKeyInput.begin(), sortedKeyInput.end(), valueInput.begin(),
+		[&inputSize](C& c, auto first1, auto last1, auto first2)
+	{
+		reserve(c, inputSize);
+		test_helpers::DualRangeApply(c, first1, last1, first2, append_element{});
+	});
+	{
+		auto kInput = keyInput; auto vInput = valueInput;
+		ExecuteTestCase<C>(times, "append (w/ reserve) move",
+			kInput.begin(), kInput.end(), vInput.begin(),
+			[&inputSize](C& c, auto first1, auto last1, auto first2)
+		{
+			reserve(c, inputSize);
+			test_helpers::DualRangeApply(c, std::make_move_iterator(first1),
+								std::make_move_iterator(last1), 
+								std::make_move_iterator(first2), 
+								append_element{});
+		});
 	}
 }
 
 template<typename C>
-std::string RunTest(const char* name)
+test_helpers::TestData RunTest(const char* name, std::ptrdiff_t testSize)
 {
-	std::string ret;
-	timings_type times;
-	GetTimings<C>(times);
-
-	ret += name;
-	ret.push_back('\n');
-	for (const auto& x : times)
-	{
-		ret += x.first;
-		ret.push_back(' ');
-		ret += std::to_string(x.second.count());
-		ret += "us\n";
-	}
-	
-	return ret;
-}
-
-void DumpResults(std::vector<std::future<std::string>>& x)
-{
-	using namespace std::literals;
-
-	auto remaining = x.size();
-	while (remaining != 0)
-	{
-		for (auto& o : x)
-		{
-			if (o.valid())
-			{
-				auto status = o.wait_for(10ms);
-				if (status != std::future_status::timeout)
-				{
-					--remaining;
-					std::cout << o.get();
-				}
-			}
-		}
-
-		std::this_thread::yield();
-	}
+	test_helpers::timings_type times;
+	GetTimings<C>(times, testSize);
+	return{ std::move(times), name, testSize };
 }
 
 int main()
 {
-	std::vector<std::future<std::string>> timingResults;
+	using namespace std::literals::chrono_literals;
+	std::vector<std::future<test_helpers::TestData>> timingResults;
 
-	timingResults.push_back(std::async(RunTest<std_map<int, int>>, "std_map<int, int>"));
-	timingResults.push_back(std::async(RunTest<dense_map<int, int>>, "dense_map<int, int>"));
-	
-	timingResults.push_back(std::async(RunTest<std_map<std::string, int>>, "std_map<std::string, int>"));
-	timingResults.push_back(std::async(RunTest<dense_map<std::string, int>>, "dense_map<std::string, int>"));
-	
-	timingResults.push_back(std::async(RunTest<std_map<int, std::string>>, "std_map<int, std::string>"));
-	timingResults.push_back(std::async(RunTest<dense_map<int, std::string>>, "dense_map<int, std::string>"));
-	
-	timingResults.push_back(std::async(RunTest<std_map<std::string, std::string>>, "std_map<std::string, std::string>"));
-	timingResults.push_back(std::async(RunTest<dense_map<std::string, std::string>>, "dense_map<std::string, std::string>"));
+	std::ptrdiff_t testSize = 64 * 1024;
 
-	DumpResults(timingResults);
+	timingResults.push_back(std::async(RunTest<std_map<int, int>>, "std_map<int, int>", testSize));
+	timingResults.push_back(std::async(RunTest<dense_map<int, int>>, "dense_map<int, int>", testSize));
+	
+	timingResults.push_back(std::async(RunTest<std_map<std::string, int>>, "std_map<std::string, int>", testSize));
+	timingResults.push_back(std::async(RunTest<dense_map<std::string, int>>, "dense_map<std::string, int>", testSize));
+	
+	timingResults.push_back(std::async(RunTest<std_map<int, std::string>>, "std_map<int, std::string>", testSize));
+	timingResults.push_back(std::async(RunTest<dense_map<int, std::string>>, "dense_map<int, std::string>", testSize));
+	
+	timingResults.push_back(std::async(RunTest<std_map<std::string, std::string>>, "std_map<std::string, std::string>", testSize));
+	timingResults.push_back(std::async(RunTest<dense_map<std::string, std::string>>, "dense_map<std::string, std::string>", testSize));
+
+	std::this_thread::sleep_for(2s);
+
+	test_helpers::DumpResults(test_helpers::WaitAndConvert(timingResults, 10));
 }
