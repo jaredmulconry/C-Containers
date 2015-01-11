@@ -64,7 +64,7 @@ namespace test_helpers
 				}
 			}
 
-			std::this_thread::yield();
+			std::this_thread::sleep_for(seconds(1));
 		}
 
 		return data;
