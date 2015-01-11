@@ -16,6 +16,12 @@ namespace InputRandomiser
 	inline std::vector<T> GetInput(std::ptrdiff_t);
 	namespace detail
 	{
+		inline std::mt19937& GetGenerator()
+		{
+			static thread_local std::mt19937 rng{ std::mt19937::default_seed };
+			return rng;
+		}
+
 		template<typename T, typename Traits, typename Alloc>
 		void generate_random_input(std::ptrdiff_t n,
 			std::vector<std::basic_string<T, Traits, Alloc>>& res)
@@ -30,16 +36,35 @@ namespace InputRandomiser
 			}
 		}
 
+		struct other_tag {};
+		struct bool_tag {};
+		struct char_tag	{};
 		template<typename T>
-		std::vector<T> GetInputNumeric(std::ptrdiff_t n, std::mt19937& rng, std::true_type)
+		struct special_tagger
+		{
+			using type = other_tag;
+		};
+		template<>
+		struct special_tagger<bool>
+		{
+			using type = bool_tag;
+		};
+		template<>
+		struct special_tagger<char>
+		{
+			using type = char_tag;
+		};
+
+		template<typename T>
+		std::vector<T> GetInputNumeric(std::ptrdiff_t n, std::mt19937& rng, other_tag)
 		{
 			std::vector<T> res;
 			res.reserve(n);
 
 			using num_traits = std::numeric_limits<T>;
-			static thread_local std::uniform_int_distribution<T> dist{ 
-													num_traits::lowest(), 
-													num_traits::max() };
+			static thread_local std::uniform_int_distribution<T> dist{
+				num_traits::lowest(),
+				num_traits::max() };
 
 			std::generate_n(std::back_inserter(res), n, [&rng]()
 			{
@@ -48,14 +73,14 @@ namespace InputRandomiser
 
 			return res;
 		}
-		template<>
-		std::vector<bool> GetInputNumeric<bool>(std::ptrdiff_t n, std::mt19937& rng, std::true_type)
+		template<typename T>
+		std::vector<T> GetInputNumeric(std::ptrdiff_t n, std::mt19937& rng, bool_tag)
 		{
-			std::vector<bool> res;
+			std::vector<T> res;
 			res.reserve(n);
 
 			static const int bitsPerInput = sizeof(std::mt19937::result_type) * 8;
-			
+
 			auto blockCount = n % bitsPerInput;
 
 			for (std::ptrdiff_t i = 0; i < blockCount; ++i)
@@ -77,10 +102,10 @@ namespace InputRandomiser
 
 			return res;
 		}
-		template<>
-		std::vector<char> GetInputNumeric<char>(std::ptrdiff_t n, std::mt19937& rng, std::true_type)
+		template<typename T>
+		std::vector<T> GetInputNumeric(std::ptrdiff_t n, std::mt19937& rng, char_tag)
 		{
-			std::vector<char> res;
+			std::vector<T> res;
 			res.reserve(n);
 
 			//33 to 126
@@ -92,6 +117,12 @@ namespace InputRandomiser
 			}
 
 			return res;
+		}
+
+		template<typename T>
+		std::vector<T> GetInputNumeric(std::ptrdiff_t n, std::mt19937& rng, std::true_type)
+		{
+			return GetInputNumeric<T>(n, rng, typename special_tagger<T>::type());
 		}
 		template<typename T>
 		//T is presumably floating-point
@@ -115,8 +146,9 @@ namespace InputRandomiser
 		//T is Arithmetic
 		inline std::vector<T> GetInputInternal(std::ptrdiff_t n, std::true_type)
 		{
-			static thread_local std::mt19937 rng;
-			return GetInputNumeric<T>(n, rng, typename std::is_integral<T>::type());
+			//static RNGWrap rngWrapped;
+			//static thread_local std::mt19937 rng;
+			return GetInputNumeric<T>(n, GetGenerator(), typename std::is_integral<T>::type());
 		}
 
 		template<typename T>
