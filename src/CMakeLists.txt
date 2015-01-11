@@ -34,7 +34,7 @@ elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL Intel)
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall")
 	SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -ipo")
 elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-	# using Visual Studio C++
+	# using Visual C++
 	# message(AUTHOR_WARNING "Requires VS2015 or later")
 	if(MSVC_VERSION LESS 1900)
 		MESSAGE(FATAL_ERROR "Project requires VS2015 or later")

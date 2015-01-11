@@ -37,7 +37,7 @@ cmake -D CMAKE_BUILD_TYPE=%build_mode% -G "MinGW Makefiles" %src_dir%
 popd
 echo Began creating Visual Studio project files at %vs_dest_dir%
 pushd %vs_dest_dir%
-cmake -G "Visual Studio 14 2015" %src_dir%
+cmake -G "Visual Studio 14 2015 Win64" %src_dir%
 popd
 echo Began creating NMake project files at %nmake_dest_dir%
 pushd %nmake_dest_dir%
