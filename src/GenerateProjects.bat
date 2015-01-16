@@ -41,7 +41,7 @@ cmake -G "Visual Studio 14 2015 Win64" %src_dir%
 popd
 echo Began creating NMake project files at %nmake_dest_dir%
 pushd %nmake_dest_dir%
-cmake -D CMAKE_BUILD_TYPE=%build_mode% -G "NMake Makefiles" %src_dir%
+cmake -D CMAKE_BUILD_TYPE=%build_mode% -G "NMake Makefiles JOM" %src_dir%
 popd
 ::Generate batch file for invoking the compilers
 echo Generating batch files
@@ -64,15 +64,25 @@ echo Generating batch files
 	@echo 		set build_flag=test
 	@echo 	^)
 	@echo ^)
-	@echo set compiler_output_file=compilerOut.txt
-	@echo set compiler_error_file=compilerErr.txt
 	@echo pushd %mingw_dest_suffix%
-	@echo call mingw32-make -j -Oline %%build_flag%% ^>%%compiler_output_file%%
+	@echo echo.
+	@echo echo Compiling with mingw32
+	@echo echo.
+	@echo call mingw32-make -j -Oline %%build_flag%%
 	@echo popd
+	@echo if not %%errorlevel%%==0 ^(
+	@echo	echo.
+	@echo	echo Compilation failed with mingw32 with error code %%errorlevel%%
+	@echo	goto quick_exit
+	@echo ^)
 	@echo pushd %nmake_dest_suffix%
+	@echo echo.
+	@echo echo Compiling with NMake
+	@echo echo.
 	@echo call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
-	@echo call NMake /nologo /x %%compiler_error_file%% %%build_flag%%^>%%compiler_output_file%%
+	@echo call jom /j4 /nologo %%build_flag%%
 	@echo popd
+	@echo :quick_exit
 	@echo endlocal
 )
 ::End of batch file generation
