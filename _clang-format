@@ -1,0 +1,53 @@
+---
+BasedOnStyle: LLVM
+ColumnLimit: 80
+IndentWidth: 4
+TabWidth: 4
+Language: Cpp
+AccessModifierOffset: -4
+AlignAfterOpenBracket: true
+AlignEscapedNewlinesLeft: true
+AlignOperands: true
+AlignTrailingComments: true
+AllowShortBlocksOnASingleLine: true
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: true
+AllowShortLoopsOnASingleLine: true
+AlwaysBreakAfterDefinitionReturnType: false
+AlwaysBreakTemplateDeclarations: true
+BinPackArguments: true
+BinPackParameters: true
+BreakBeforeBinaryOperators: None
+BreakBeforeBraces: Allman
+BreakConstructorInitializersBeforeComma: true
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+DerivePointerAlignment: false
+IndentCaseLabels: false
+IndentWrappedFunctionNames: true
+KeepEmptyLinesAtTheStartOfBlocks: false
+NamespaceIndentation: All
+PenaltyBreakBeforeFirstCallParameter: 300
+PointerAlignment: Right
+SpaceAfterCStyleCast: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeParens: Never
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 0
+SpacesInAngles: false
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+Standard: Cpp11
+UseTab: Always
+
+#{BasedOnStyle: "LLVM", ColumnLimit: 80, IndentWidth: 4, TabWidth: 4, Language: Cpp, AccessModifierOffset: -4, AlignAfterOpenBracket: true, 
+# AlignEscapedNewlinesLeft: true, AlignOperands: true, AlignTrailingComments: true, AllowShortBlocksOnASingleLine: true, 
+# AllowShortFunctionsOnASingleLine: Empty, AllowShortIfStatementsOnASingleLine: true, AllowShortLoopsOnASingleLine: true, 
+# AlwaysBreakAfterDefinitionReturnType: false, AlwaysBreakTemplateDeclarations: true, BinPackArguments: true, 
+# BinPackParameters: true, BreakBeforeBinaryOperators: None, BreakBeforeBraces: Allman, BreakConstructorInitializersBeforeComma: true, 
+# ConstructorInitializerAllOnOneLineOrOnePerLine: true, DerivePointerAlignment: false, IndentCaseLabels: false, 
+# IndentWrappedFunctionNames: true, KeepEmptyLinesAtTheStartOfBlocks: false, NamespaceIndentation: All, 
+# PenaltyBreakBeforeFirstCallParameter: 300, PointerAlignment: Left, SpaceAfterCStyleCast: false, 
+# SpaceBeforeAssignmentOperators: true, SpaceBeforeParens: Never, SpaceInEmptyParentheses: false, 
+# SpacesBeforeTrailingComments: 0, SpacesInAngles: false, SpacesInCStyleCastParentheses: false, SpacesInParentheses: false, 
+# SpacesInSquareBrackets: false, Standard: Cpp11, UseTab: Always}
