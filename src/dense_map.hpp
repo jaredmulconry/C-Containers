@@ -12,7 +12,7 @@
 
 namespace custom_containers
 {
-	template<class Cont>
+	template <class Cont>
 	struct DenseMapConstIterator
 	{
 		using iterator_category = std::random_access_iterator_tag;
@@ -29,22 +29,24 @@ namespace custom_containers
 		using value_type = typename Cont::value_type;
 		using Kpointer = typename Cont::KIterator;
 		using Vpointer = typename Cont::VIterator;
+
 	protected:
 		Kpointer key;
 		Vpointer value;
+
 	public:
 		DenseMapConstIterator() noexcept = default;
 		DenseMapConstIterator(const MyType&) noexcept = default;
 		~DenseMapConstIterator() = default;
-		DenseMapConstIterator(Kpointer k, Vpointer v)
-			:key(k)
-			, value(v)
-		{}
-		template<typename I, class =
-			std::enable_if_t < std::is_base_of<MyType, I>::value >>
+		DenseMapConstIterator(Kpointer k, Vpointer v) : key(k), value(v)
+		{
+		}
+		template <typename I,
+				  class = std::enable_if_t<std::is_base_of<MyType, I>::value>>
 		explicit DenseMapConstIterator(const I& i) noexcept
 			: MyType(static_cast<const MyType&>(i))
-		{}
+		{
+		}
 		DenseMapConstIterator& operator=(const MyType&) noexcept = default;
 
 		reference operator*() const
@@ -79,18 +81,13 @@ namespace custom_containers
 
 		MyType& operator+=(difference_type n)
 		{
-			difference_type m = n;
-			if (m >= 0)
-				while (m--)
-					++*this;
-			else
-				while (m++)
-					--*this;
+			this->key += n;
+			this->value += n;
 			return *this;
 		}
 		MyType& operator-=(difference_type n)
 		{
-			return *this += -n;
+			return (*this) += -n;
 		}
 
 		reference operator[](difference_type n) const
@@ -98,56 +95,48 @@ namespace custom_containers
 			return *(*this + n);
 		}
 
-		inline
-			MyType operator+(difference_type n) const
+		inline MyType operator+(difference_type n) const
 		{
 			MyType tmp = *this;
 			return tmp += n;
 		}
-		inline
-			MyType operator-(difference_type n) const
+		inline MyType operator-(difference_type n) const
 		{
 			MyType tmp = *this;
 			return tmp -= n;
 		}
-		inline friend
-			difference_type operator-(const MyType& x, const MyType& y)
+		inline friend difference_type operator-(const MyType& x,
+												const MyType& y)
 		{
 			return x.key - y.key;
 		}
 
-		inline friend
-			bool operator==(const MyType& x, const MyType& y)
+		inline friend bool operator==(const MyType& x, const MyType& y)
 		{
 			return x.key == y.key;
 		}
-		inline friend
-			bool operator!=(const MyType& x, const MyType& y)
+		inline friend bool operator!=(const MyType& x, const MyType& y)
 		{
 			return !(x == y);
 		}
-		inline friend
-			bool operator<(const MyType& x, const MyType& y)
+		inline friend bool operator<(const MyType& x, const MyType& y)
 		{
 			return x.key < y.key;
 		}
-		inline friend
-			bool operator>(const MyType& x, const MyType& y)
+		inline friend bool operator>(const MyType& x, const MyType& y)
 		{
 			return y < x;
 		}
-		inline friend
-			bool operator<=(const MyType& x, const MyType& y)
+		inline friend bool operator<=(const MyType& x, const MyType& y)
 		{
 			return !(y < x);
 		}
-		inline friend
-			bool operator>=(const MyType& x, const MyType& y)
+		inline friend bool operator>=(const MyType& x, const MyType& y)
 		{
 			return !(x < y);
 		}
 	};
-	template<class Cont>
+	template <class Cont>
 	struct DenseMapIterator : public DenseMapConstIterator<Cont>
 	{
 		using MyType = DenseMapIterator<Cont>;
@@ -165,29 +154,30 @@ namespace custom_containers
 		using value_type = typename Cont::value_type;
 		using Kpointer = typename MyBase::Kpointer;
 		using Vpointer = typename MyBase::Vpointer;
+
 	private:
-		inline static
-			MyBase& CvtRef(MyType& _Xa)
+		inline static MyBase& CvtRef(MyType& _Xa)
 		{
 			return static_cast<MyBase&>(_Xa);
 		}
-		inline static
-			const MyBase& CvtRef(const MyType& _Xa)
+		inline static const MyBase& CvtRef(const MyType& _Xa)
 		{
 			return static_cast<const MyBase&>(_Xa);
 		}
+
 	public:
 		DenseMapIterator() noexcept = default;
 		DenseMapIterator(const MyType&) noexcept = default;
 		~DenseMapIterator() = default;
-		DenseMapIterator(Kpointer k, Vpointer v)
-			: MyBase(k, v)
-		{}
+		DenseMapIterator(Kpointer k, Vpointer v) : MyBase(k, v)
+		{
+		}
 		DenseMapIterator& operator=(const MyType&) noexcept = default;
 
 		reference operator*() const
 		{
-			return reference(key_reference(*MyBase::key), value_reference(*MyBase::value));
+			return reference(key_reference(*MyBase::key),
+							 value_reference(*MyBase::value));
 		}
 
 		MyType& operator++()
@@ -220,7 +210,7 @@ namespace custom_containers
 		}
 		MyType& operator-=(difference_type n)
 		{
-			return *this += -n;
+			return (*this) += -n;
 		}
 
 		reference operator[](difference_type n) const
@@ -228,65 +218,55 @@ namespace custom_containers
 			return *(*this + n);
 		}
 
-		inline
-			MyType operator+(difference_type n) const
+		inline MyType operator+(difference_type n) const
 		{
 			MyType tmp = *this;
 			return tmp += n;
 		}
-		inline
-			MyType operator-(difference_type n) const
+		inline MyType operator-(difference_type n) const
 		{
 			MyType tmp = *this;
 			return tmp -= n;
 		}
-		inline friend
-			difference_type operator-(const MyType& x, const MyType& y)
+		inline friend difference_type operator-(const MyType& x,
+												const MyType& y)
 		{
 			return CvtRef(x) - CvtRef(y);
 		}
 
-		inline friend
-			bool operator==(const MyType& x, const MyType& y)
+		inline friend bool operator==(const MyType& x, const MyType& y)
 		{
 			return CvtRef(x) == CvtRef(y);
 		}
-		inline friend
-			bool operator!=(const MyType& x, const MyType& y)
+		inline friend bool operator!=(const MyType& x, const MyType& y)
 		{
 			return !(x == y);
 		}
-		inline friend
-			bool operator<(const MyType& x, const MyType& y)
+		inline friend bool operator<(const MyType& x, const MyType& y)
 		{
 			return CvtRef(x) < CvtRef(y);
 		}
-		inline friend
-			bool operator>(const MyType& x, const MyType& y)
+		inline friend bool operator>(const MyType& x, const MyType& y)
 		{
 			return y < x;
 		}
-		inline friend
-			bool operator<=(const MyType& x, const MyType& y)
+		inline friend bool operator<=(const MyType& x, const MyType& y)
 		{
 			return !(y < x);
 		}
-		inline friend
-			bool operator>=(const MyType& x, const MyType& y)
+		inline friend bool operator>=(const MyType& x, const MyType& y)
 		{
 			return !(x < y);
 		}
 	};
 
-	template<typename Key, typename T,
-		typename Compare = std::less<>,
-		typename KeyAllocator = std::allocator<Key>,
-		typename ValueAllocator = std::allocator < T >>
+	template <typename Key, typename T, typename Compare = std::less<>,
+			  typename KeyAllocator = std::allocator<Key>,
+			  typename ValueAllocator = std::allocator<T>>
 	class DenseMap
 	{
 	public:
-		using MyType = DenseMap<Key, T, Compare, KeyAllocator,
-			ValueAllocator>;
+		using MyType = DenseMap<Key, T, Compare, KeyAllocator, ValueAllocator>;
 
 		using KStorage = std::vector<Key, KeyAllocator>;
 		using VStorage = std::vector<T, ValueAllocator>;
@@ -294,7 +274,7 @@ namespace custom_containers
 		using VIterator = typename VStorage::iterator;
 
 		using allocator_type = std::pair<typename KStorage::allocator_type,
-										typename VStorage::allocator_type>;
+										 typename VStorage::allocator_type>;
 
 		using key_type = Key;
 		using mapped_type = T;
@@ -312,18 +292,17 @@ namespace custom_containers
 		using value_const_pointer = typename VStorage::const_pointer;
 
 		using reference = std::pair<key_const_reference, value_reference>;
-		using const_reference = std::pair<key_const_reference,
-			value_const_reference>;
+		using const_reference =
+			std::pair<key_const_reference, value_const_reference>;
 		using pointer = reference;
 		using const_pointer = const_reference;
 
 		using value_type = std::pair<const key_type, mapped_type>;
-		using size_type = std::common_type_t<
-							typename KStorage::size_type,
-							typename VStorage::size_type>;
-		using difference_type = std::common_type_t<
-									typename KStorage::difference_type,
-									typename VStorage::difference_type>;
+		using size_type = std::common_type_t<typename KStorage::size_type,
+											 typename VStorage::size_type>;
+		using difference_type =
+			std::common_type_t<typename KStorage::difference_type,
+							   typename VStorage::difference_type>;
 		using iterator = DenseMapIterator<MyType>;
 		using const_iterator = DenseMapConstIterator<MyType>;
 		using reverse_iterator = std::reverse_iterator<iterator>;
@@ -332,21 +311,24 @@ namespace custom_containers
 		class value_compare
 		{
 			friend class DenseMap;
+
 		protected:
 			Compare comp;
-			value_compare(Compare cmp)
-				: comp(cmp)
-			{}
+			value_compare(Compare cmp) : comp(cmp)
+			{
+			}
+
 		public:
 			using result_type = bool;
 
-			template<typename U, typename V, typename W, typename X>
+			template <typename U, typename V, typename W, typename X>
 			bool operator()(const std::pair<U, V>& x,
-				const std::pair<W, X>& y) const
+							const std::pair<W, X>& y) const
 			{
 				return comp(x.first, y.first);
 			}
 		};
+
 	private:
 		KStorage keys;
 		VStorage values;
@@ -355,11 +337,13 @@ namespace custom_containers
 		class equivelance_compare
 		{
 			friend class DenseMap;
+
 		protected:
 			Compare* comp;
-			equivelance_compare(Compare& cmp)
-				: comp(&cmp)
-			{}
+			equivelance_compare(Compare& cmp) : comp(&cmp)
+			{
+			}
+
 		public:
 			using result_type = bool;
 
@@ -369,7 +353,7 @@ namespace custom_containers
 			}
 		};
 
-		template<typename K, typename U>
+		template <typename K, typename U>
 		iterator PutElement(const_iterator pos, K&& key, U&& value)
 		{
 			auto offset = pos - cbegin();
@@ -379,9 +363,9 @@ namespace custom_containers
 
 			return begin() + offset;
 		}
-		template<typename I1, typename I2>
+		template <typename I1, typename I2>
 		void AppendRange(I1 kfirst, I1 klast, I2 vfirst, I2 vlast,
-			std::input_iterator_tag, std::input_iterator_tag)
+						 std::input_iterator_tag, std::input_iterator_tag)
 		{
 			auto keyPrevSize = keys.size();
 			auto valuePrevSize = values.size();
@@ -389,22 +373,22 @@ namespace custom_containers
 			keys.insert(keys.cend(), kfirst, klast);
 			values.insert(values.cend(), vfirst, vlast);
 
-			if (keys.size() != values.size())
-			{
+			if(keys.size() != values.size()) {
 				keys.erase(keys.cbegin() + keyPrevSize, keys.cend());
 				values.erase(values.cbegin() + valuePrevSize, values.cend());
 
-				throw std::length_error("insert of ranges with different lengths.");
+				throw std::length_error(
+					"insert of ranges with different lengths.");
 			}
 		}
-		template<typename I1, typename I2>
+		template <typename I1, typename I2>
 		void AppendRange(I1 kfirst, I1 klast, I2 vfirst, I2 vlast,
-			std::forward_iterator_tag, std::forward_iterator_tag)
+						 std::forward_iterator_tag, std::forward_iterator_tag)
 		{
 			auto dist = std::distance(kfirst, klast);
-			if (dist != std::distance(vfirst, vlast))
-			{
-				throw std::length_error("insert of ranges with different lengths.");
+			if(dist != std::distance(vfirst, vlast)) {
+				throw std::length_error(
+					"insert of ranges with different lengths.");
 			}
 
 			ReserveSpace(dist);
@@ -412,21 +396,21 @@ namespace custom_containers
 			keys.insert(keys.cend(), kfirst, klast);
 			values.insert(values.cend(), vfirst, vlast);
 		}
-		template<typename I1, typename I2, typename Tag1, typename Tag2>
-		void InsertRange(I1 kfirst, I1 klast, I2 vfirst, I2 vlast,
-			Tag1, Tag2)
+		template <typename I1, typename I2, typename Tag1, typename Tag2>
+		void InsertRange(I1 kfirst, I1 klast, I2 vfirst, I2 vlast, Tag1, Tag2)
 		{
 			auto prevSize = size();
 			AppendRange(kfirst, klast, vfirst, vlast, Tag1{}, Tag2{});
 
 			MakeOrdered(prevSize);
 		}
-		template<typename K>
+		template <typename K>
 		std::pair<size_type, bool> FindOffset(const K& key) const
 		{
-			auto pos = std::lower_bound(keys.begin(), keys.end(), key, cmp.comp);
+			auto pos =
+				std::lower_bound(keys.begin(), keys.end(), key, cmp.comp);
 			return std::make_pair(pos - keys.begin(),
-				pos != keys.end() && !cmp.comp(key, *pos));
+								  pos != keys.end() && !cmp.comp(key, *pos));
 		}
 		void ReserveSpace(size_type n)
 		{
@@ -436,47 +420,46 @@ namespace custom_containers
 		void MakeOrdered(size_type prevSize)
 		{
 			using mapping_type = std::pair<KIterator, VIterator>;
-			auto mapped_comp =
-				[=](const mapping_type& x, const mapping_type& y)
+			auto mapped_comp = [=](const mapping_type& x, const mapping_type& y)
 			{
 				return this->cmp.comp(*x.first, *y.first);
 			};
 
 			std::vector<mapping_type> mappings;
 			mappings.reserve(keys.size());
-			auto kBegin = keys.begin(); auto kEnd = keys.end();
+			auto kBegin = keys.begin();
+			auto kEnd = keys.end();
 			auto vBegin = values.begin();
 
-			for (; kBegin != kEnd; ++kBegin, (void)++vBegin)
-			{
+			for(; kBegin != kEnd; ++kBegin, (void)++vBegin) {
 				mappings.emplace_back(kBegin, vBegin);
 			}
 
 			std::stable_sort(mappings.begin() + prevSize, mappings.end(),
-				mapped_comp);
-			
+							 mapped_comp);
+
 			std::inplace_merge(mappings.begin(), mappings.begin() + prevSize,
-				mappings.end(), mapped_comp);
-			
+							   mappings.end(), mapped_comp);
+
 			equivelance_compare compare(cmp.comp);
-			auto uniqueMappingEnd = std::unique(mappings.begin(), mappings.end(),
-				[=](const mapping_type& x, const mapping_type& y)
-			{
-				return compare(*x.first, *y.first);
-			});
+			auto uniqueMappingEnd =
+				std::unique(mappings.begin(), mappings.end(),
+							[=](const mapping_type& x, const mapping_type& y)
+							{
+								return compare(*x.first, *y.first);
+							});
 
 			KStorage tmpKeys;
 			VStorage tmpValues;
 			tmpKeys.reserve(keys.capacity());
 			tmpValues.reserve(keys.capacity());
 
-			std::for_each(mappings.begin(),
-				uniqueMappingEnd,
-				[&tmpKeys, &tmpValues](mapping_type& x)
-			{
-				tmpKeys.push_back(std::move(*x.first));
-				tmpValues.push_back(std::move(*x.second));
-			});
+			std::for_each(mappings.begin(), uniqueMappingEnd,
+						  [&tmpKeys, &tmpValues](mapping_type& x)
+						  {
+							  tmpKeys.push_back(std::move(*x.first));
+							  tmpValues.push_back(std::move(*x.second));
+						  });
 
 			keys = std::move(tmpKeys);
 			values = std::move(tmpValues);
@@ -486,85 +469,86 @@ namespace custom_containers
 			keys.clear();
 			values.clear();
 		}
+
 	public:
 		DenseMap(const KeyAllocator& kAllocator = KeyAllocator(),
-			const ValueAllocator& vAllocator = ValueAllocator())
+				 const ValueAllocator& vAllocator = ValueAllocator())
 			: DenseMap(Compare(), kAllocator, vAllocator)
-		{}
+		{
+		}
 		explicit DenseMap(const Compare& comp,
-			const KeyAllocator& kAllocator = KeyAllocator(),
-			const ValueAllocator& vAllocator = ValueAllocator())
-			: keys(kAllocator)
-			, values(vAllocator)
-			, cmp(comp)
-		{}
-		template<typename I1, typename I2>
+						  const KeyAllocator& kAllocator = KeyAllocator(),
+						  const ValueAllocator& vAllocator = ValueAllocator())
+			: keys(kAllocator), values(vAllocator), cmp(comp)
+		{
+		}
+		template <typename I1, typename I2>
 		DenseMap(I1 kfirst, I1 klast, I2 vfirst, I2 vlast,
-			const Compare& comp = Compare(),
-			const KeyAllocator& kAllocator = KeyAllocator(),
-			const ValueAllocator& vAllocator = ValueAllocator())
+				 const Compare& comp = Compare(),
+				 const KeyAllocator& kAllocator = KeyAllocator(),
+				 const ValueAllocator& vAllocator = ValueAllocator())
 			: keys(kfirst, klast, kAllocator)
 			, values(vfirst, vlast, vAllocator)
 			, cmp(comp)
 		{
-			if (keys.size() != values.size())
-			{
+			if(keys.size() != values.size()) {
 				CleanUp();
-				throw std::length_error("keys and values ranges are of different lengths");
+				throw std::length_error(
+					"keys and values ranges are of different lengths");
 			}
 			MakeOrdered(0u);
 		}
-		template<typename I1, typename I2>
+		template <typename I1, typename I2>
 		DenseMap(I1 kfirst, I1 klast, I2 vfirst, I2 vlast,
-			const KeyAllocator& kAllocator,
-			const ValueAllocator& vAllocator)
-			: DenseMap(kfirst, klast, vfirst, vlast, Compare(),
-			kAllocator, vAllocator)
-		{}
+				 const KeyAllocator& kAllocator,
+				 const ValueAllocator& vAllocator)
+			: DenseMap(kfirst, klast, vfirst, vlast, Compare(), kAllocator,
+					   vAllocator)
+		{
+		}
 		DenseMap(const MyType& other)
-			: keys(other.keys)
-			, values(other.values)
-			, cmp(other.cmp)
-		{}
+			: keys(other.keys), values(other.values), cmp(other.cmp)
+		{
+		}
 		DenseMap(const MyType& other, const KeyAllocator& kAllocator,
-			const ValueAllocator& vAllocator)
+				 const ValueAllocator& vAllocator)
 			: keys(other.keys, kAllocator)
 			, values(other.values, vAllocator)
 			, cmp(other.cmp)
-		{}
+		{
+		}
 		DenseMap(MyType&& other)
 			: keys(std::move(other.keys))
 			, values(std::move(other.values))
 			, cmp(std::move(other.cmp))
-		{}
+		{
+		}
 		DenseMap(MyType&& other, const KeyAllocator& kAllocator,
-			const ValueAllocator& vAllocator)
+				 const ValueAllocator& vAllocator)
 			: keys(std::move(other.keys), kAllocator)
 			, values(std::move(other.values), vAllocator)
 			, cmp(std::move(other.cmp))
-		{}
+		{
+		}
 		DenseMap(std::initializer_list<value_type> init,
-			const Compare& comp = Compare(),
-			const KeyAllocator& kAlloc = KeyAllocator(),
-			const ValueAllocator& vAlloc = ValueAllocator())
-			: keys(kAlloc)
-			, values(vAlloc)
-			, cmp(comp)
+				 const Compare& comp = Compare(),
+				 const KeyAllocator& kAlloc = KeyAllocator(),
+				 const ValueAllocator& vAlloc = ValueAllocator())
+			: keys(kAlloc), values(vAlloc), cmp(comp)
 		{
 			ReserveSpace(init.size());
-			std::for_each(init.begin(), init.end(),
-				[=](const value_type& x)
-			{
-				this->keys.push_back(x.first);
-				this->values.push_back(x.second);
-			});
+			std::for_each(init.begin(), init.end(), [=](const value_type& x)
+						  {
+							  this->keys.push_back(x.first);
+							  this->values.push_back(x.second);
+						  });
 			MakeOrdered(0);
 		}
 		DenseMap(std::initializer_list<value_type> init,
-			const KeyAllocator& kAlloc,
-			const ValueAllocator& vAlloc)
+				 const KeyAllocator& kAlloc, const ValueAllocator& vAlloc)
 			: DenseMap(init, Compare(), kAlloc, vAlloc)
-		{}
+		{
+		}
 		~DenseMap() = default;
 		MyType& operator=(const MyType& x)
 		{
@@ -588,12 +572,11 @@ namespace custom_containers
 			values.clear();
 			ReserveSpace(init.size());
 
-			std::for_each(init.begin(), init.end(),
-				[=](const value_type& x)
-			{
-				keys.push_back(x.first);
-				values.push_back(x.second);
-			});
+			std::for_each(init.begin(), init.end(), [=](const value_type& x)
+						  {
+							  keys.push_back(x.first);
+							  values.push_back(x.second);
+						  });
 
 			MakeOrdered(0);
 
@@ -612,7 +595,7 @@ namespace custom_containers
 		{
 			auto unsafeThis = const_cast<MyType* const>(this);
 			return const_iterator(unsafeThis->keys.begin(),
-				unsafeThis->values.begin());
+								  unsafeThis->values.begin());
 		}
 		const_iterator cbegin() const noexcept
 		{
@@ -626,7 +609,7 @@ namespace custom_containers
 		{
 			auto unsafeThis = const_cast<MyType* const>(this);
 			return const_iterator(unsafeThis->keys.end(),
-				unsafeThis->values.end());
+								  unsafeThis->values.end());
 		}
 		const_iterator cend() const noexcept
 		{
@@ -691,7 +674,8 @@ namespace custom_containers
 		{
 			return values.rbegin();
 		}
-		typename VStorage::const_reverse_iterator crbegin_values() const noexcept
+		typename VStorage::const_reverse_iterator crbegin_values() const
+			noexcept
 		{
 			return rbegin_values();
 		}
@@ -744,36 +728,35 @@ namespace custom_containers
 			return cmp;
 		}
 
-		template<typename K>
+		template <typename K>
 		T& at(const K& key)
 		{
 			auto offset = FindOffset(key);
-			if (!offset.second)
-			{
+			if(!offset.second) {
 				throw std::out_of_range("Provided key could not be found.");
 			}
 
 			return values[offset.first];
 		}
-		template<typename K>
+		template <typename K>
 		const T& at(const K& key) const
 		{
 			auto offset = FindOffset(key);
-			if (!offset.second)
-			{
+			if(!offset.second) {
 				throw std::out_of_range("Provided key could not be found.");
 			}
 
 			return values[offset.first];
 		}
-		template<typename K>
+		template <typename K>
 		T& operator[](K&& key)
 		{
 			auto found = FindOffset(key);
 
-			return found.second ? (values[found.first]) :
-				(*insert(cbegin() + found.first, std::forward<K>(key),
-				mapped_type())).second;
+			return found.second
+					   ? (values[found.first])
+					   : (*insert(cbegin() + found.first, std::forward<K>(key),
+								  mapped_type())).second;
 		}
 
 		template <typename K>
@@ -814,32 +797,31 @@ namespace custom_containers
 		std::pair<iterator, iterator> equal_range(const K& key)
 		{
 			auto found = find(key);
-			if (found == end())
-			{
-				return std::make_pair(found, begin());
+			if(found == end()) {
+				return std::pair<iterator, iterator>(found, begin());
 			}
 			else
 			{
-				return std::make_pair(found, found + 1);
+				return std::pair<iterator, iterator>(found, found + 1);
 			}
 		}
 		template <typename K>
-		std::pair<const_iterator, const_iterator> 
+		std::pair<const_iterator, const_iterator>
 			equal_range(const K& key) const
 		{
 			auto found = find(key);
-			if (found == end())
-			{
-				return std::make_pair(found, begin());
+			if(found == end()) {
+				return std::pair<const_iterator, const_iterator>(found,
+																 begin());
 			}
 			else
 			{
-				return std::make_pair(found, found + 1);
+				return std::pair<const_iterator, const_iterator>(found,
+																 found + 1);
 			}
 		}
 
-		
-		template<typename M>
+		template <typename M>
 		void append(M&& x)
 		{
 			return append(std::forward<M>(x).first, std::forward<M>(x).second);
@@ -850,162 +832,159 @@ namespace custom_containers
 			keys.push_back(std::forward<K>(key));
 			values.push_back(std::forward<U>(value));
 		}
-		template<typename I1, typename I2>
+		template <typename I1, typename I2>
 		iterator append(I1 kfirst, I1 klast, I2 vfirst, I2 vlast)
 		{
 			AppendRange(kfirst, klast, vfirst, vlast,
-				typename std::iterator_traits<I1>::iterator_category(),
-				typename std::iterator_traits<I2>::iterator_category());
+						typename std::iterator_traits<I1>::iterator_category(),
+						typename std::iterator_traits<I2>::iterator_category());
 		}
 
-		template<typename M>
+		template <typename M>
 		std::pair<iterator, bool> insert(M&& x)
 		{
 			return insert(std::forward<M>(x).first, std::forward<M>(x).second);
 		}
-		template<typename M>
+		template <typename M>
 		iterator insert(const_iterator pos, M&& x)
 		{
 			return insert(pos, std::forward<M>(x).first,
-							std::forward<M>(x).second);
+						  std::forward<M>(x).second);
 		}
-		template <typename K, typename U, class =
-			std::enable_if_t<std::is_constructible<value_type, K&&, U&&>::value>>
+		template <typename K, typename U,
+				  class = std::enable_if_t<
+					  std::is_constructible<value_type, K&&, U&&>::value>>
 		std::pair<iterator, bool> insert(K&& key, U&& value)
 		{
 			auto found = FindOffset(key);
 
-			return std::make_pair(found.second ? (begin() + found.first) :
-				PutElement(cbegin() + found.first, std::forward<K>(key),
-				std::forward<U>(value)),
-				found.second);
+			return std::pair<iterator,
+							 bool>(found.second
+									   ? (begin() + found.first)
+									   : PutElement(cbegin() + found.first,
+													std::forward<K>(key),
+													std::forward<U>(value)),
+								   found.second);
 		}
 		template <typename K, typename U>
 		iterator insert(const_iterator pos, K&& key, U&& value)
 		{
-			if (size() == 0)
-			{
+			if(size() == 0) {
 				return PutElement(cend(), std::forward<K>(key),
-					std::forward<U>(value));
+								  std::forward<U>(value));
 			}
-			else if (pos == cend())
+			else if(pos == cend())
 			{
 				auto prev = pos - 1;
-				if (cmp.comp((*prev).first, key))
-				{
+				if(cmp.comp((*prev).first, key)) {
 					return PutElement(pos, std::forward<K>(key),
-						std::forward<U>(value));
+									  std::forward<U>(value));
 				}
 			}
-			else if (pos == cbegin())
+			else if(pos == cbegin())
 			{
-				if (cmp.comp(key, (*pos).first))
-				{
+				if(cmp.comp(key, (*pos).first)) {
 					return PutElement(pos, std::forward<K>(key),
-						std::forward<U>(value));
+									  std::forward<U>(value));
 				}
 			}
 			else
 			{
 				auto prev = pos - 1;
 
-				if (cmp.comp(key, (*pos).first))
-				{
-					if (cmp.comp((*prev).first, key))
-					{
+				if(cmp.comp(key, (*pos).first)) {
+					if(cmp.comp((*prev).first, key)) {
 						return PutElement(pos, std::forward<K>(key),
-							std::forward<U>(value));
+										  std::forward<U>(value));
 					}
 				}
 			}
 
 			return insert(std::forward<K>(key), std::forward<U>(value)).first;
 		}
-		template<typename I1, typename I2>
+		template <typename I1, typename I2>
 		void insert(I1 kfirst, I1 klast, I2 vfirst, I2 vlast)
 		{
 			InsertRange(kfirst, klast, vfirst, vlast,
-				typename std::iterator_traits<I1>::iterator_category(),
-				typename std::iterator_traits<I2>::iterator_category());
+						typename std::iterator_traits<I1>::iterator_category(),
+						typename std::iterator_traits<I2>::iterator_category());
 		}
 		void insert(std::initializer_list<value_type> elems)
 		{
-			if (elems.size() == 0) return;
+			if(elems.size() == 0) return;
 
 			ReserveSpace(elems.size());
 			auto prevSize = keys.size();
 
-			std::for_each(elems.begin(), elems.end(),
-				[=](const value_type& x)
-			{
-				keys.push_back(x.first);
-				values.push_back(x.second);
-			});
+			std::for_each(elems.begin(), elems.end(), [=](const value_type& x)
+						  {
+							  keys.push_back(x.first);
+							  values.push_back(x.second);
+						  });
 
 			MakeOrdered(prevSize);
 		}
 
-		template<typename M>
+		template <typename M>
 		std::pair<iterator, bool> insert_or_assign(M&& x)
 		{
-			return insert_or_assign(std::forward<M>(x).first, 
+			return insert_or_assign(std::forward<M>(x).first,
 									std::forward<M>(x).second);
 		}
-		template<typename M>
+		template <typename M>
 		iterator insert_or_assign(const_iterator pos, M&& x)
 		{
 			return insert_or_assign(pos, std::forward<M>(x).first,
 									std::forward<M>(x).second);
 		}
-		template<typename K, typename U, class =
-			std::enable_if_t<std::is_constructible<value_type, K&&, U&&>::value>>
+		template <typename K, typename U,
+				  class = std::enable_if_t<
+					  std::is_constructible<value_type, K&&, U&&>::value>>
 		std::pair<iterator, bool> insert_or_assign(K&& key, U&& value)
 		{
 			auto found = FindOffset(key);
 
-			if (found.second)
-			{
+			if(found.second) {
 				values[found.first] = std::forward<U>(value);
-				return std::make_pair(begin() + found.first, found.second);
+				return std::pair<iterator, bool>(begin() + found.first,
+												 found.second);
 			}
 			else
 			{
-				return std::make_pair(PutElement(cbegin() + found.first, 
-										std::forward<K>(key),
-										std::forward<U>(value)),
-									found.second);
+				return std::pair<iterator,
+								 bool>(PutElement(cbegin() + found.first,
+												  std::forward<K>(key),
+												  std::forward<U>(value)),
+									   found.second);
 			}
 		}
-		template<typename K, typename U>
+		template <typename K, typename U>
 		iterator insert_or_assign(const_iterator pos, K&& key, U&& value)
 		{
-			if (size() == 0)
-			{
+			if(size() == 0) {
 				return PutElement(cend(), std::forward<K>(key),
-					std::forward<U>(value));
+								  std::forward<U>(value));
 			}
-			else if (pos == cend())
+			else if(pos == cend())
 			{
 				auto prev = begin() + ((pos - 1) - cbegin());
-				if (cmp.comp((*prev).first, key))
-				{
+				if(cmp.comp((*prev).first, key)) {
 					return PutElement(pos, std::forward<K>(key),
-						std::forward<U>(value));
+									  std::forward<U>(value));
 				}
-				else if (!cmp.comp(key, (*prev).first))
+				else if(!cmp.comp(key, (*prev).first))
 				{
 					(*prev).second = std::forward<U>(value);
 					return prev;
 				}
 			}
-			else if (pos == cbegin())
+			else if(pos == cbegin())
 			{
-				if (cmp.comp(key, (*pos).first))
-				{
+				if(cmp.comp(key, (*pos).first)) {
 					return PutElement(pos, std::forward<K>(key),
-						std::forward<U>(value));
+									  std::forward<U>(value));
 				}
-				else if (!cmp.comp((*pos).first, key))
+				else if(!cmp.comp((*pos).first, key))
 				{
 					values[0] = std::forward<U>(value);
 					return begin();
@@ -1016,27 +995,26 @@ namespace custom_containers
 				auto position = begin() + (pos - cbegin());
 				auto prev = position - 1;
 
-				if (cmp.comp(key, (*position).first))
-				{
-					if (cmp.comp((*prev).first, key))
-					{
+				if(cmp.comp(key, (*position).first)) {
+					if(cmp.comp((*prev).first, key)) {
 						return PutElement(position, std::forward<K>(key),
-							std::forward<U>(value));
+										  std::forward<U>(value));
 					}
-					else if (!cmp.comp(key, (*prev).first))
+					else if(!cmp.comp(key, (*prev).first))
 					{
 						(*prev).second = std::forward<U>(value);
 						return prev;
 					}
 				}
-				else if (cmp.comp((*position).first, key))
+				else if(cmp.comp((*position).first, key))
 				{
 					(*position).second = std::forward<U>(value);
 					return position;
 				}
 			}
 
-			return insert_or_assign(std::forward<K>(key), std::forward<U>(value)).first;
+			return insert_or_assign(std::forward<K>(key),
+									std::forward<U>(value)).first;
 		}
 
 		iterator erase(const_iterator pos)
@@ -1059,7 +1037,7 @@ namespace custom_containers
 			return begin() + bOffset;
 		}
 
-		//n is size() prior to appending elements
+		// n is size() prior to appending elements
 		void make_ordered(size_type n = 0u)
 		{
 			MakeOrdered(n);
@@ -1076,45 +1054,38 @@ namespace custom_containers
 			swap(cmp, other.cmp);
 		}
 
-		friend
-			void swap(const MyType& x, const MyType& y)
+		friend void swap(const MyType& x, const MyType& y)
 		{
 			x.swap(y);
 		}
 
-		friend
-			bool operator==(const MyType& x, const MyType& y)
+		friend bool operator==(const MyType& x, const MyType& y)
 		{
 			return x.size() == y.size() &&
-				std::equal(x.cbegin(), x.cend(), y.cbegin());
+				   std::equal(x.cbegin(), x.cend(), y.cbegin());
 		}
-		friend
-			bool operator!=(const MyType& x, const MyType& y)
+		friend bool operator!=(const MyType& x, const MyType& y)
 		{
 			return !(x == y);
 		}
-		friend
-			bool operator<(const MyType& x, const MyType& y)
+		friend bool operator<(const MyType& x, const MyType& y)
 		{
 			return std::lexicographical_compare(x.cbegin(), x.cend(),
-				y.cbegin(), y.cend());
+												y.cbegin(), y.cend());
 		}
-		friend
-			bool operator>(const MyType& x, const MyType& y)
+		friend bool operator>(const MyType& x, const MyType& y)
 		{
 			return y < x;
 		}
-		friend
-			bool operator<=(const MyType& x, const MyType& y)
+		friend bool operator<=(const MyType& x, const MyType& y)
 		{
 			return !(y < x);
 		}
-		friend
-			bool operator>=(const MyType& x, const MyType& y)
+		friend bool operator>=(const MyType& x, const MyType& y)
 		{
 			return !(x < y);
 		}
 	};
 }
 
-#endif //DENSE_MAP_HPP
+#endif// DENSE_MAP_HPP
