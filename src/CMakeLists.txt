@@ -8,12 +8,12 @@ get_filename_component(SOURCE_DIRECTORY_PARENT "${CMAKE_SOURCE_DIR}" DIRECTORY)
 SET(MY_OWN_INSTALL_PREFIX "${SOURCE_DIRECTORY_PARENT}" CACHE PATH "Prefix prepended to install directories")
 SET(CMAKE_INSTALL_PREFIX "${MY_OWN_INSTALL_PREFIX}" CACHE INTERNAL "Prefix prepended to install directories" FORCE)
 
-SET(VECTOR_TEST_HEADERS MyMallocator.hpp vector.hpp)
-SET(DENSE_MAP_TEST_HEADERS MyMallocator.hpp dense_map.hpp)
+SET(VECTOR_TEST_HEADERS MyMallocator.hpp vector.hpp test/test_helpers.hpp)
+SET(DENSE_MAP_TEST_HEADERS MyMallocator.hpp dense_map.hpp test/test_helpers.hpp)
 SET(DENSE_MAP_PERF_HEADERS ${DENSE_MAP_TEST_HEADERS} test/randomised_input.hpp test/test_helpers.hpp)
 
-add_executable(vector_test ${VECTOR_TEST_HEADERS} test/vector_test.cpp)
-add_executable(dense_map_test ${DENSE_MAP_TEST_HEADERS} test/dense_map_test.cpp)
+add_executable(vector_test ${VECTOR_TEST_HEADERS} test/vector_test.cpp test/test_helpers.cpp)
+add_executable(dense_map_test ${DENSE_MAP_TEST_HEADERS} test/dense_map_test.cpp test/test_helpers.cpp)
 add_executable(dense_map_perf ${DENSE_MAP_PERF_HEADERS} test/dense_map_perf.cpp test/test_helpers.cpp)
 install(TARGETS vector_test dense_map_test dense_map_perf DESTINATION "build")
 

@@ -75,4 +75,26 @@ namespace test_helpers
 			std::cout << std::endl;
 		}
 	}
+	void WaitAndConvert(std::vector<std::future<void>>& handles,
+						std::ptrdiff_t msWait)
+	{
+		if(handles.size() == 0) return;
+
+		using namespace std::chrono;
+
+		auto remaining = handles.size();
+		while(remaining != 0) {
+			for(auto& o : handles) {
+				if(o.valid()) {
+					auto status = o.wait_for(milliseconds(msWait));
+					if(status != std::future_status::timeout) {
+						--remaining;
+						o.get();
+					}
+				}
+			}
+
+			std::this_thread::sleep_for(seconds(1));
+		}
+	}
 }

@@ -1,6 +1,7 @@
 #include "dense_map.hpp"
 #include <future>
 #include "MyMallocator.hpp"
+#include "test_helpers.hpp"
 #include <thread>
 #include <vector>
 
@@ -12,17 +13,17 @@ void AccessorTest();
 void AddRemoveTest();
 void RelationalTest();
 
-template<typename T>
+template <typename T>
 using comparison_type = std::less<T>;
-template<typename K, typename T>
-using dense_map = custom_containers::DenseMap < K, T, comparison_type<void>,
-	MyMallocator< K >, MyMallocator < T >> ;
-template<typename K, typename T>
+template <typename K, typename T>
+using dense_map = custom_containers::DenseMap<K, T, comparison_type<void>,
+											  MyMallocator<K>, MyMallocator<T>>;
+template <typename K, typename T>
 using value_type = typename dense_map<K, T>::value_type;
 
-template<typename T, typename U>
+template <typename T, typename U>
 using KeyAllocator = typename dense_map<T, U>::allocator_type::first_type;
-template<typename T, typename U>
+template <typename T, typename U>
 using ValueAllocator = typename dense_map<T, U>::allocator_type::second_type;
 
 int main()
@@ -40,40 +41,44 @@ int main()
 
 	std::this_thread::yield();
 
-	for (const auto& x : futures)
-	{
-		x.wait();
-	}
+	test_helpers::WaitAndConvert(futures, 10);
 }
 
 void ConstructorTest()
 {
-	std::vector<int> k{ 3, 4, 7, 11, 14, 25, 9, 1, 1, 6 };
-	std::vector<int> v{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-	auto init = std::initializer_list<value_type<int, int>>
-		{ { 3, 5 },{ 2, 4 },{ 1, 1 },{ 4, 4 },{ 1, 3 } };
+	std::vector<int> k{3, 4, 7, 11, 14, 25, 9, 1, 1, 6};
+	std::vector<int> v{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+	auto init = std::initializer_list<value_type<int, int>>{{3, 5},
+															{2, 4},
+															{1, 1},
+															{4, 4},
+															{1, 3}};
 	dense_map<int, int> m1;
-	dense_map<int, int> m2{ comparison_type<void>() };
+	dense_map<int, int> m2{comparison_type<void>()};
 	dense_map<int, int> m3(k.begin(), k.end(), v.begin(), v.end());
 	dense_map<int, int> m4(v.begin(), v.end(), k.begin(), k.end(),
-		KeyAllocator<int, int>(), ValueAllocator<int, int>());
+						   KeyAllocator<int, int>(),
+						   ValueAllocator<int, int>());
 	dense_map<int, int> m5(m3);
 	dense_map<int, int> m6(m4, KeyAllocator<int, int>(),
-		ValueAllocator<int, int>());
+						   ValueAllocator<int, int>());
 	dense_map<int, int> m7(std::move(m3));
-	dense_map<int, int> m8(std::move(m4),
-		KeyAllocator<int, int>(), ValueAllocator<int, int>());
+	dense_map<int, int> m8(std::move(m4), KeyAllocator<int, int>(),
+						   ValueAllocator<int, int>());
 	dense_map<int, int> m9(init);
-	dense_map<int, int> m10(init,
-		KeyAllocator<int, int>(), ValueAllocator<int, int>());
+	dense_map<int, int> m10(init, KeyAllocator<int, int>(),
+							ValueAllocator<int, int>());
 
-	(void)m1, (void)m2, (void)m3, (void)m4, (void)m5, (void)m6, (void)m7, 
+	(void)m1, (void)m2, (void)m3, (void)m4, (void)m5, (void)m6, (void)m7,
 		(void)m8, (void)m9, (void)m10;
 }
 void AssignmentTest()
 {
-	auto init = std::initializer_list<value_type<int, int>>
-	{ { 3, 5 }, { 2, 4 }, { 1, 1 }, { 4, 4 }, { 1, 3 } };
+	auto init = std::initializer_list<value_type<int, int>>{{3, 5},
+															{2, 4},
+															{1, 1},
+															{4, 4},
+															{1, 3}};
 
 	dense_map<int, int> m1(init);
 	dense_map<int, int> m2(init);
@@ -86,8 +91,11 @@ void AssignmentTest()
 void IteratorTest()
 {
 	int a = 33;
-	auto init = std::initializer_list<value_type<int, int>>
-	{ { 3, 5 }, { 2, 4 }, { 1, 1 }, { 4, 4 }, { 1, 3 } };
+	auto init = std::initializer_list<value_type<int, int>>{{3, 5},
+															{2, 4},
+															{1, 1},
+															{4, 4},
+															{1, 3}};
 
 	dense_map<int, int> v(init);
 	auto allocInstance = v.get_allocator();
@@ -142,24 +150,34 @@ void DimensionTest()
 }
 void AccessorTest()
 {
-	auto init = std::initializer_list<value_type<int, int>>
-	{ { 3, 5 }, { 2, 4 }, { 1, 1 }, { 4, 4 }, { 1, 3 } };
+	auto init = std::initializer_list<value_type<int, int>>{{3, 5},
+															{2, 4},
+															{1, 1},
+															{4, 4},
+															{1, 3}};
 
 	dense_map<int, int> m(init);
 	const dense_map<int, int>& mr = m;
 
 	m[0] = 42, m.at(0), mr.at(0);
-	(void)m.find(3); (void)mr.find(11);
-	(void)m.lower_bound(5); (void)mr.lower_bound(3);
-	(void)m.upper_bound(2); (void)mr.upper_bound(5);
-	(void)m.equal_range(5); (void)mr.equal_range(1);
+	(void)m.find(3);
+	(void)mr.find(11);
+	(void)m.lower_bound(5);
+	(void)mr.lower_bound(3);
+	(void)m.upper_bound(2);
+	(void)mr.upper_bound(5);
+	(void)m.equal_range(5);
+	(void)mr.equal_range(1);
 }
 void AddRemoveTest()
 {
-	std::vector<int> k{ 3, 4, 7, 11, 14, 25, 9, 1, 1, 6 };
-	std::vector<int> v{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-	auto init = std::initializer_list<value_type<int, int>>
-	{ { 3, 5 }, { 2, 4 }, { 1, 1 }, { 4, 4 }, { 1, 3 } };
+	std::vector<int> k{3, 4, 7, 11, 14, 25, 9, 1, 1, 6};
+	std::vector<int> v{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+	auto init = std::initializer_list<value_type<int, int>>{{3, 5},
+															{2, 4},
+															{1, 1},
+															{4, 4},
+															{1, 3}};
 
 	dense_map<int, int> m1(init);
 	int a = 24;
@@ -188,11 +206,14 @@ void AddRemoveTest()
 }
 void RelationalTest()
 {
-	auto init = std::initializer_list<value_type<int, int>>
-	{ { 3, 5 }, { 2, 4 }, { 1, 1 }, { 4, 4 }, { 1, 3 } };
+	auto init = std::initializer_list<value_type<int, int>>{{3, 5},
+															{2, 4},
+															{1, 1},
+															{4, 4},
+															{1, 3}};
 
-	dense_map<int, int> m1{ init };
-	dense_map<int, int> m2{ init };
+	dense_map<int, int> m1{init};
+	dense_map<int, int> m2{init};
 
 	m1 == m1;
 	m1 == m2;

@@ -1,8 +1,10 @@
 #include <future>
 #include "MyMallocator.hpp"
 #include <thread>
+#include "test_helpers.hpp"
 #include <type_traits>
 #include "vector.hpp"
+#include <vector>
 
 void ConstructorTest();
 void AssignmentTest();
@@ -21,7 +23,7 @@ template class custom_std::vector < bool, allocator_type<bool> >;
 
 int main()
 {
-	vec_type<std::future<void>> futures;
+	std::vector<std::future<void>> futures;
 	futures.reserve(8);
 	
 	futures.push_back(std::async(ConstructorTest));
@@ -34,10 +36,7 @@ int main()
 	
 	std::this_thread::yield();
 	
-	for(const auto& x : futures)
-	{
-		x.wait();
-	}
+	test_helpers::WaitAndConvert(futures, 10);
 }
 
 void ConstructorTest()
