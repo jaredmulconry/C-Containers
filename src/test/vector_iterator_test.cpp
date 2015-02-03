@@ -49,8 +49,8 @@ void IteratorTest()
 		auto i8 = i7;
 
 		i2[0], i4[0], i6[0], i8[0];
-		i2 == i2, i4 == i4, i6 == i6, i8 == i8;
-		i2 < i2, i4 < i4, i6 < i6, i8 < i8;
+		(void)(i2 == i2), (void)(i4 == i4), (void)(i6 == i6), (void)(i8 == i8);
+		(void)(i2 < i2), (void)(i4 < i4), (void)(i6 < i6), (void)(i8 < i8);
 
 		(void)allocInstance;
 	}
@@ -83,8 +83,8 @@ void IteratorTest()
 		auto i8 = i7;
 
 		i2[0], i4[0], i6[0], i8[0];
-		i2 == i2, i4 == i4, i6 == i6, i8 == i8;
-		i2 < i2, i4 < i4, i6 < i6, i8 < i8;
+		(void)(i2 == i2), (void)(i4 == i4), (void)(i6 == i6), (void)(i8 == i8);
+		(void)(i2 < i2), (void)(i4 < i4), (void)(i6 < i6), (void)(i8 < i8);
 
 		(void)allocInstance;
 	}

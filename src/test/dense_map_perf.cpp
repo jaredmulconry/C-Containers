@@ -372,37 +372,37 @@ int main()
 	auto stringInput2 = InputRandomiser::GetInput<std::string>(testSize);
 
 	timingResults.push_back(
-		std::async(std::launch::async, RunTest<std_map<int, int>, int, int>,
+		std::async(std::launch::async, &RunTest<std_map<int, int>, int, int>,
 				   "std_map<int, int>", intInput1, intInput2));
 	timingResults.push_back(
-		std::async(std::launch::async, RunTest<dense_map<int, int>, int, int>,
+		std::async(std::launch::async, &RunTest<dense_map<int, int>, int, int>,
 				   "dense_map<int, int>", intInput1, intInput2));
 
 	timingResults.push_back(
 		std::async(std::launch::async,
-				   RunTest<std_map<std::string, int>, std::string, int>,
+				   &RunTest<std_map<std::string, int>, std::string, int>,
 				   "std_map<std::string, int>", stringInput1, intInput2));
 	timingResults.push_back(
 		std::async(std::launch::async,
-				   RunTest<dense_map<std::string, int>, std::string, int>,
+				   &RunTest<dense_map<std::string, int>, std::string, int>,
 				   "dense_map<std::string, int>", stringInput1, intInput2));
 
 	timingResults.push_back(
 		std::async(std::launch::async,
-				   RunTest<std_map<int, std::string>, int, std::string>,
+				   &RunTest<std_map<int, std::string>, int, std::string>,
 				   "std_map<int, std::string>", intInput1, stringInput2));
 	timingResults.push_back(
 		std::async(std::launch::async,
-				   RunTest<dense_map<int, std::string>, int, std::string>,
+				   &RunTest<dense_map<int, std::string>, int, std::string>,
 				   "dense_map<int, std::string>", intInput1, stringInput2));
 
 	timingResults.push_back(std::async(
 		std::launch::async,
-		RunTest<std_map<std::string, std::string>, std::string, std::string>,
+		&RunTest<std_map<std::string, std::string>, std::string, std::string>,
 		"std_map<std::string, std::string>", stringInput1, stringInput2));
 	timingResults.push_back(std::async(
 		std::launch::async,
-		RunTest<dense_map<std::string, std::string>, std::string, std::string>,
+		&RunTest<dense_map<std::string, std::string>, std::string, std::string>,
 		"dense_map<std::string, std::string>", stringInput1, stringInput2));
 
 	std::this_thread::sleep_for(2s);

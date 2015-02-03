@@ -1979,7 +1979,7 @@ namespace custom_std
 			auto _First = this->begin() + _Off;
 			auto _Last = this->begin() + (_Off + _Dist);
 
-			auto _Next = ::std::copy(_Last, this->end(), _First);
+			::std::copy(_Last, this->end(), _First);
 			this->_Size -= _Dist;
 			auto _Count = this->_ToUnits(this->size());
 			if (_Count < this->_Store.size())
