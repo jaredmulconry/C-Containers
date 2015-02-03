@@ -38,11 +38,11 @@ add_test(denseMapPerf dense_map_perf)
 
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
 	# using Clang
-	string(CONCAT CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} " -std=c++14 -Wall -pedantic")
+	string(CONCAT CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} " -std=c++1y -stdlib=libc++ -Wall -pedantic -pthread")
 	string(CONCAT CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE} " -O3")
 elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
 	# using GCC
-	string(CONCAT CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} " -std=c++14 -Wall -pedantic -Wextra")
+	string(CONCAT CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} " -std=c++14 -Wall -pedantic -Wextra -pthread")
 	string(CONCAT CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE} " -flto")
 elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL Intel)
 	# using Intel C++
